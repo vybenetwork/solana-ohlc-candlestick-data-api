@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solana OHLC Candlestick Data</title>
+    <link rel="stylesheet" href="app.css" />
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>OHLC Candlestick Data</h1>
+        <p class="subtitle">Solana OHLC candles via Vybe API — token &amp; market candles, trade history, filters + CSV export</p>
+      </header>
+
+      <section class="inputs panel">
+        <div class="section-header">
+          <h2>Remote filters</h2>
+        </div>
+        <p class="meta remote-filters-help">
+          <strong>Remote filters</strong> fetch trades from the Vybe API and change the dataset.
+        </p>
+        <div class="candles-controls candles-controls--remote">
+          <div class="field field-switch candles-source-switch">
+            <div class="field-switch-header">
+              <span class="label-icon field-icon icon-market" aria-hidden="true"></span>
+              <span class="field-switch-title">Candles source</span>
+              <span
+                class="field-switch-info icon-info-wrap"
+                title="Vybe OHLC API (Full), candles rebuilt from trades, or Vybe OHLC by market address."
+                aria-label="More info"
+              >
+                <span
+                  class="label-icon field-icon icon-info"
+                  aria-hidden="true"
+                  title="Vybe OHLC API (Full), candles rebuilt from trades, or Vybe OHLC by market address."
+                ></span>
+              </span>
+            </div>
+            <div class="candles-source-row">
+              <label for="candlesSourceSelect" class="candles-source-label">
+                <select id="candlesSourceSelect" class="candles-source-select" aria-label="Candles source">
+                  <option value="full">Vybe OHLC API (Full)</option>
+                  <option value="trades">Rebuild from trades</option>
+                  <option value="market">Vybe OHLC by Market API</option>
+                </select>
+              </label>
+              <div class="candles-market-address-wrap" id="candlesMarketAddressWrap" hidden>
+                <label for="candlesMarketAddress" class="candles-market-address-label">Market address</label>
+                <input type="text" id="candlesMarketAddress" class="candles-market-address-input" placeholder="Market / pool address" title="Vybe market address for GET /v4/markets/{marketAddress}/candles" />
+              </div>
+              <div class="candles-pages-wrap" id="candlesPagesWrap">
+                <div class="candles-pages-header">
+                  <span class="field-switch-title">Pages</span>
+                </div>
+                <div class="candles-pages-input-wrap">
+                  <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." />
+                </div>
+              </div>
+              <div class="candles-chart-quotes-wrap" id="chartQuotesWrap" title="Which quote mint to use for the chart (one at a time).">
+                <div class="candles-chart-quotes-header">
+                  <span class="field-switch-title">Chart quote</span>
+                </div>
+                <div class="candles-chart-quotes-slots" id="chartQuotesCheckboxes"></div>
+              </div>
+            </div>
+            <div class="candles-pages-progress" id="candlesPagesProgress" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="mintAddress">
+            <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
+            Token mint (either side)
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-tag" aria-hidden="true"></span>
+            <input
+              type="text"
+              id="mintAddress"
+              placeholder="e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+              value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="timeStart">
+            <span class="label-icon field-icon icon-clock" aria-hidden="true"></span>
+            Start time
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-clock" aria-hidden="true"></span>
+            <input type="datetime-local" id="timeStart" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="timeEnd">
+            <span class="label-icon field-icon icon-clock" aria-hidden="true"></span>
+            End time
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-clock" aria-hidden="true"></span>
+            <input type="datetime-local" id="timeEnd" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="candlesResolution">
+            <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+            Candle resolution
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-grid" aria-hidden="true"></span>
+            <select id="candlesResolution">
+              <option value="1m" selected>1m</option>
+              <option value="3m">3m</option>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="30m">30m</option>
+              <option value="1h">1h</option>
+              <option value="2h">2h</option>
+              <option value="3h">3h</option>
+              <option value="4h">4h</option>
+              <option value="1d">1d</option>
+              <option value="1w">1w</option>
+              <option value="1mo">1mo</option>
+              <option value="1y">1y</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sort">
+            <span class="label-icon field-icon icon-sort" aria-hidden="true"></span>
+            Sort
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-sort" aria-hidden="true"></span>
+            <select id="sort">
+              <option value="blockTime:desc" selected>blockTime desc</option>
+              <option value="blockTime:asc">blockTime asc</option>
+              <option value="price:desc">price desc</option>
+              <option value="price:asc">price asc</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>
+            <span class="label-icon field-icon icon-pages" aria-hidden="true"></span>
+            Page(s)
+          </label>
+          <div class="page-range">
+            <div class="field-control">
+              <span class="field-icon icon-pages" aria-hidden="true"></span>
+              <input type="number" id="pageFrom" min="0" step="1" value="0" />
+            </div>
+            <span class="page-range-sep">to</span>
+            <div class="field-control">
+              <span class="field-icon icon-pages" aria-hidden="true"></span>
+              <input type="number" id="pageTo" min="0" step="1" placeholder="-" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="limit">
+            <span class="label-icon field-icon icon-hash" aria-hidden="true"></span>
+            Limit
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-hash" aria-hidden="true"></span>
+            <select id="limit">
+              <option value="100">100</option>
+              <option value="250">250</option>
+              <option value="500">500</option>
+              <option value="1000" selected>1000</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field field-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+          <div class="field-switch-header">
+            <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+            <span class="field-switch-title">No gaps</span>
+            <span class="field-switch-info icon-info-wrap" title="Eliminate gaps between candles by using previous close as next open. Default is true." aria-label="More info">
+              <span class="label-icon field-icon icon-info" aria-hidden="true" title="Eliminate gaps between candles by using previous close as next open. Default is true."></span>
+            </span>
+          </div>
+          <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+            <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
+            <span class="trades-fetch-switch-track">
+              <span class="trades-fetch-switch-option" data-value="off">Off</span>
+              <span class="trades-fetch-switch-option" data-value="on">On</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="maxPages" title="When using Export paginated CSV, stop after this many pages.">
+            <span class="label-icon field-icon icon-download" aria-hidden="true"></span>
+            Max pages
+          </label>
+          <div class="field-control">
+            <span class="field-icon icon-download" aria-hidden="true"></span>
+            <input type="number" id="maxPages" min="1" step="1" value="50" title="When using Export paginated CSV, stop after this many pages." />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="fetchBtn">Fetch Candles</button>
+          <button type="button" id="exportBtn" disabled>Export current page CSV</button>
+          <button type="button" id="exportAllBtn" disabled>Export paginated CSV</button>
+          <div class="loading" id="loadingIndicator" hidden aria-hidden="true">
+            <span class="loading-spinner"></span>
+            <span class="loading-text">Loading…</span>
+          </div>
+        </div>
+
+        <details class="advanced local-filters-panel" id="localFiltersDetails" hidden>
+          <summary>Rebuild from trades parameters</summary>
+          <div class="local-filters">
+            <div class="local-filters-global">
+              <div class="local-filters-global-row">
+                <div class="field">
+                  <label for="localAuthority" title="Show only trades where the authority (signer) address contains this text.">
+                    <span class="label-icon field-icon icon-user" aria-hidden="true"></span>
+                    Authority contains
+                  </label>
+                  <div class="field-control">
+                    <span class="field-icon icon-user" aria-hidden="true"></span>
+                    <input type="text" id="localAuthority" placeholder="authority address substring" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="localSignature" title="Show only trades where the transaction signature (TXID) contains this text.">
+                    <span class="label-icon field-icon icon-hash" aria-hidden="true"></span>
+                    TXID contains
+                  </label>
+                  <div class="field-control">
+                    <span class="field-icon icon-hash" aria-hidden="true"></span>
+                    <input type="text" id="localSignature" placeholder="signature or txid substring" />
+                  </div>
+                </div>
+              </div>
+              <div class="local-filters-global-row local-filters-row-type-checkbox">
+                <div class="field field-switch">
+                  <div class="field-switch-header">
+                    <span class="label-icon field-icon icon-user" aria-hidden="true"></span>
+                    <span class="field-switch-title">Authority = fee payer</span>
+                    <span class="field-switch-info icon-info-wrap" title="Show only trades where the signer (authority) is also the fee payer." aria-label="More info">
+                      <span class="label-icon field-icon icon-info" aria-hidden="true" title="Show only trades where the signer (authority) is also the fee payer."></span>
+                    </span>
+                  </div>
+                  <label class="trades-fetch-switch" title="Show only trades where the signer (authority) is also the fee payer.">
+                    <input type="checkbox" id="authorityEqualsFeePayer" class="trades-fetch-switch-input" aria-hidden="true">
+                    <span class="trades-fetch-switch-track">
+                      <span class="trades-fetch-switch-option" data-value="off">Any signer</span>
+                      <span class="trades-fetch-switch-option" data-value="on">Same only</span>
+                    </span>
+                  </label>
+                </div>
+                <div class="field field-program">
+                  <label for="localProgram" title="Show only trades where the program ID contains this text (e.g. Raydium, Orca).">
+                    <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                    Program contains
+                  </label>
+                  <div class="field-control">
+                    <span class="field-icon icon-grid" aria-hidden="true"></span>
+                    <input type="text" id="localProgram" placeholder="program id substring" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <h3 class="local-filters-subtitle">Per-quote mint (min/max size, spam filter)</h3>
+            <p class="meta">Set min/max quote size per quote token. Filled after fetch from loaded trades.</p>
+            <div id="perQuoteFiltersContainer" class="local-filters-dynamic">            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel" id="tokenSection">
+        <div class="section-header">
+          <h2>Token metadata</h2>
+          <div class="section-loading" id="tokenLoading" hidden aria-hidden="true">
+            <span class="loading-spinner"></span>
+            <span class="loading-text">Loading…</span>
+          </div>
+          <span class="section-error" id="tokenError" hidden aria-hidden="true"></span>
+        </div>
+        <div class="token-meta-header">
+          <img id="tokenLogo" alt="" class="token-logo" style="display:none" />
+          <div>
+            <div class="token-title">
+              <span id="tokenSymbol" class="token-symbol">—</span>
+              <span id="tokenName" class="token-name">—</span>
+            </div>
+            <div class="token-subtitle">
+              <span class="token-subtitle-label">Mint:</span>
+              <span id="tokenMint">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="token-meta-grid" id="tokenMetaGrid">
+          <div class="token-meta-item"><span class="token-meta-label">Verified</span><span id="tokenVerified">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">Category</span><span id="tokenCategory">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">Decimals</span><span id="tokenDecimals">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">Price (USD)</span><span id="tokenPriceUsd">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">Market cap (USD)</span><span id="tokenMarketCapUsd">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">24h volume (USD)</span><span id="tokenVolume24hUsd">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">24h volume (token)</span><span id="tokenVolume24hToken">—</span></div>
+          <div class="token-meta-item"><span class="token-meta-label">Last updated</span><span id="tokenUpdateTime">—</span></div>
+        </div>
+      </section>
+
+      <section class="panel" id="candlesSection">
+        <div class="section-header">
+          <h2>Price candlestick chart</h2>
+          <div class="section-loading" id="candlesLoading" hidden aria-hidden="true">
+            <span class="loading-spinner"></span>
+            <span class="loading-text">Loading…</span>
+          </div>
+          <span class="section-error" id="candlesError" hidden aria-hidden="true"></span>
+        </div>
+        <p class="meta">
+          Candles from Vybe OHLC API (Full), rebuilt from trades, or by market via Vybe OHLC by Market API.
+        </p>
+        <div class="candles-chart-wrapper">
+          <div id="candlesChart" class="candles-chart" aria-label="Price candlestick chart"></div>
+          <div id="candlesChartOverlay" class="candles-chart-overlay" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-header">
+          <h2>Trades</h2>
+          <div class="section-loading" id="tradesLoading" hidden aria-hidden="true">
+            <span class="loading-spinner"></span>
+            <span class="loading-text" id="tradesLoadingText">Loading…</span>
+          </div>
+          <span class="section-error" id="tradesError" hidden aria-hidden="true"></span>
+        </div>
+        <p class="meta" id="tradesMeta">—</p>
+        <div class="trades-summary-grid" id="tradesSummary" aria-live="polite">
+          <div class="trades-summary-item">
+            <span class="trades-summary-label">Trades loaded</span>
+            <span id="tradesSummaryCount">0</span>
+          </div>
+          <div class="trades-summary-item">
+            <span class="trades-summary-label">Programs</span>
+            <span id="tradesSummaryPrograms">0</span>
+          </div>
+          <div class="trades-summary-item">
+            <span class="trades-summary-label">Markets</span>
+            <span id="tradesSummaryMarkets">0</span>
+          </div>
+          <div class="trades-summary-item">
+            <span class="trades-summary-label">Quote tokens</span>
+            <span id="tradesSummaryQuotes">0</span>
+          </div>
+          <div class="trades-summary-item">
+            <span class="trades-summary-label">Time range</span>
+            <span id="tradesSummaryTime">—</span>
+          </div>
+        </div>
+        <div class="table-wrap table-wrap--scroll">
+          <table id="tradesTable">
+            <thead>
+              <tr>
+                <th style="text-align:left">Time (DD/MM/YY)</th>
+                <th style="text-align:center">Type</th>
+                <th style="text-align:right">Price</th>
+                <th style="text-align:right">Input mint</th>
+                <th style="text-align:right">Output mint</th>
+                <th style="text-align:left">Market</th>
+                <th style="text-align:left">Program</th>
+                <th style="text-align:left">Authority (Fee Payer)</th>
+                <th style="text-align:center">TXID</th>
+              </tr>
+            </thead>
+            <tbody id="tradesBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+
