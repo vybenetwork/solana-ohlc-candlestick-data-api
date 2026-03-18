@@ -1474,9 +1474,9 @@ function resolutionToSeconds(resolution: string): number {
   }
 }
 
-async function fetchCandlesFromApi(mint: string, resolution: string): Promise<Candle[]> {
+async function fetchCandlesFromApi(mint: string, resolution: string, pageOverride?: number): Promise<Candle[]> {
   const limit = Number(limitSelect?.value) || 1000;
-  const page = Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
+  const page = pageOverride !== undefined ? pageOverride : Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
   const timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
   let timeEnd = parseUnixSecondsFromDatetimeLocal(timeEndInput?.value ?? '');
   if (timeEnd == null || timeEnd < 0) timeEnd = Math.floor(Date.now() / 1000);
@@ -1512,9 +1512,9 @@ async function fetchCandlesFromApi(mint: string, resolution: string): Promise<Ca
   return mapped;
 }
 
-async function fetchCandlesFromMarketApi(marketAddress: string, resolution: string): Promise<Candle[]> {
+async function fetchCandlesFromMarketApi(marketAddress: string, resolution: string, pageOverride?: number): Promise<Candle[]> {
   const limit = Number(limitSelect?.value) || 1000;
-  const page = Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
+  const page = pageOverride !== undefined ? pageOverride : Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
   const timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
   let timeEnd = parseUnixSecondsFromDatetimeLocal(timeEndInput?.value ?? '');
   if (timeEnd == null || timeEnd < 0) timeEnd = Math.floor(Date.now() / 1000);
@@ -1943,6 +1943,7 @@ async function refreshCandles(tradesSnapshot?: VybeTrade[]): Promise<void> {
       candlesLoading.hidden = true;
       candlesLoading.setAttribute('aria-hidden', 'true');
     }
+    setExportButtonsState();
   }
 }
 
@@ -2264,6 +2265,35 @@ function downloadCsv(filename: string, csv: string): void {
   URL.revokeObjectURL(url);
 }
 
+/** Candles currently used for the chart: from trades (filtered) or from API (full/market). */
+function getChartCandles(): Candle[] {
+  const source = candlesSourceSelect?.value ?? 'full';
+  if (source === 'trades') return lastCandlesFromTrades;
+  return lastCandlesFromApi;
+}
+
+function setExportButtonsState(): void {
+  const candles = getChartCandles();
+  const source = candlesSourceSelect?.value ?? 'full';
+  const mint = mintAddressInput?.value?.trim() ?? '';
+  const market = candlesMarketAddressInput?.value?.trim() ?? '';
+  exportBtn.disabled = candles.length === 0;
+  exportAllBtn.disabled =
+    candles.length === 0 && !(source === 'full' && mint) && !(source === 'market' && market);
+}
+
+function candlesToCsv(candles: Candle[]): string {
+  const header = ['time', 'time_iso', 'open', 'high', 'low', 'close', 'volume'];
+  const rows = candles.map((c) => {
+    const timeIso = Number.isFinite(c.time) ? new Date(c.time * 1000).toISOString() : '';
+    const vol = c.volume != null && Number.isFinite(c.volume) ? String(c.volume) : '';
+    return [c.time, timeIso, c.open, c.high, c.low, c.close, vol]
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',');
+  });
+  return [header.join(','), ...rows].join('\n');
+}
+
 async function onFetch(): Promise<void> {
   clearError();
   clearInlineError(tokenError);
@@ -2378,8 +2408,7 @@ async function onFetch(): Promise<void> {
             filteredCount: tableTrades.length,
             query: pages.length > 1 ? `pages ${pageFrom}..${p}` : `page ${p}`,
           });
-          exportBtn.disabled = tableTrades.length === 0;
-          exportAllBtn.disabled = remoteForDisplay.length === 0;
+          setExportButtonsState();
           if (useRebuildCandles) {
             // Build per-quote rows (and wick-filtered data) before radios so any 'change' from buildChartQuotesRadios sees filtered data.
             buildLocalFilterRows();
@@ -2407,8 +2436,7 @@ async function onFetch(): Promise<void> {
       filteredCount: tableTrades.length,
       query: pages.length > 1 ? `pages=${pages[0]}..${pages[pages.length - 1]}` : `page=${pages[0]}`,
     });
-    exportBtn.disabled = tableTrades.length === 0;
-    exportAllBtn.disabled = lastRemoteTrades.length === 0;
+    setExportButtonsState();
     // Build per-quote rows (and wick-filtered data) before radios so any 'change' from buildChartQuotesRadios sees filtered data.
     buildLocalFilterRows(fullRemoteForDisplay);
     if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
@@ -2458,7 +2486,7 @@ function onLocalFilterChange(): void {
     filteredCount: tableTrades.length,
     query: '',
   });
-  exportBtn.disabled = tableTrades.length === 0;
+  setExportButtonsState();
   // Build wick-filtered data before refreshing chart so we never paint unfiltered wicks.
   buildLocalFilterRows();
   if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
@@ -2468,6 +2496,7 @@ function onLocalFilterChange(): void {
     }
     void refreshCandles(lastFilteredTrades);
   }
+  setExportButtonsState();
   if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
     buildChartQuotesRadios();
   }
@@ -2482,55 +2511,73 @@ fetchBtn.addEventListener('click', () => {
 });
 
 exportBtn.addEventListener('click', () => {
-  const page = Math.max(0, Math.trunc(Number(pageFromInput.value || '0')));
-  const csv = toCsv(getTradesForTableDisplay());
-  downloadCsv(`trades-page-${page}.csv`, csv);
+  const candles = getChartCandles();
+  if (candles.length === 0) {
+    showError('No OHLC data to export. Fetch candles or trades first.');
+    return;
+  }
+  const page = Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
+  const csv = candlesToCsv(candles);
+  downloadCsv(`ohlc-page-${page}.csv`, csv);
 });
 
 exportAllBtn.addEventListener('click', async () => {
   clearError();
+  const source = candlesSourceSelect?.value ?? 'full';
+  const resolution = candlesResolutionSelect?.value || '1m';
+  const mint = mintAddressInput?.value?.trim() ?? '';
+  const marketAddress = candlesMarketAddressInput?.value?.trim() ?? '';
+
+  if (source === 'trades') {
+    const candles = getChartCandles();
+    if (candles.length === 0) {
+      showError('No OHLC data to export. Fetch trades and ensure the chart has data.');
+      return;
+    }
+    const csv = candlesToCsv(candles);
+    downloadCsv('ohlc-from-trades.csv', csv);
+    return;
+  }
+
+  if (source === 'full' && !mint) {
+    showError('Enter a token mint for Vybe API: OHLC Vetted Markets.');
+    return;
+  }
+  if (source === 'market' && !marketAddress) {
+    showError('Enter a market address for Vybe API: OHLC from Market.');
+    return;
+  }
+
   exportAllBtn.disabled = true;
   loadingIndicator.hidden = false;
   loadingIndicator.setAttribute('aria-hidden', 'false');
-  tradesLoading.hidden = false;
-  tradesLoading.setAttribute('aria-hidden', 'false');
 
   try {
-    const query = buildTradesQueryForTable();
-    const limit = Number(limitSelect.value) || 1000;
+    const limit = Number(limitSelect?.value) || 1000;
     const maxPages = Math.max(1, Math.trunc(Number(maxPagesInput?.value || '50')));
+    const allCandles: Candle[] = [];
 
-    // Export pulls pages starting from pageFrom.
-    const startPage = Math.max(0, Math.trunc(Number(pageFromInput.value || '0')));
-    const all: VybeTrade[] = [];
-
-    for (let i = 0; i < maxPages; i++) {
-      const page = startPage + i;
-      const qs = new URLSearchParams(query);
-      qs.set('page', String(page));
-      qs.set('limit', String(limit));
-      const res = await fetchWithRetry(`/api/trades?${qs.toString()}`);
-      const body = (await res.json().catch(() => ({}))) as TradesResponse & { error?: string };
-      if (!res.ok) throw new Error(body.error || `Failed (${res.status})`);
-
-      const chunk = Array.isArray(body.data) ? body.data : [];
-      all.push(...chunk);
-
-      // Done when a page returns fewer than limit.
+    for (let page = 0; page < maxPages; page++) {
+      const chunk =
+        source === 'market'
+          ? await fetchCandlesFromMarketApi(marketAddress, resolution, page)
+          : await fetchCandlesFromApi(mint, resolution, page);
+      allCandles.push(...chunk);
       if (chunk.length < limit) break;
     }
 
-    const filtered = applyLocalFilters(all);
-    const csv = toCsv(filtered);
-    downloadCsv(`trades-export-${startPage}-pages.csv`, csv);
+    if (allCandles.length === 0) {
+      showError('No OHLC data returned from API.');
+      return;
+    }
+    const csv = candlesToCsv(allCandles);
+    downloadCsv(`ohlc-export-${source}-${allCandles.length}.csv`, csv);
   } catch (err) {
     showError(err instanceof Error ? err.message : String(err));
   } finally {
     loadingIndicator.hidden = true;
     loadingIndicator.setAttribute('aria-hidden', 'true');
-    tradesLoading.hidden = true;
-    tradesLoading.setAttribute('aria-hidden', 'true');
-    exportAllBtn.disabled = lastRemoteTrades.length === 0;
+    setExportButtonsState();
   }
 });
 
