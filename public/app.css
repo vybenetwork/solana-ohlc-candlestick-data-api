@@ -1036,6 +1036,9 @@ tr:hover td {
 .local-filters-pages-chart-row .field-chart-quote {
   flex: 0 0 auto;
 }
+.local-filters-panel .field.field-wick-deviation {
+  max-width: 50%;
+}
 .local-filters-panel .local-filters-pages-chart-row .field .field-switch-header {
   display: flex;
   align-items: center;
@@ -1123,7 +1126,7 @@ tr:hover td {
 }
 .field-control-input-suffix .input-suffix {
   position: absolute;
-  right: 0.5rem;
+  right: 76px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
@@ -1131,6 +1134,20 @@ tr:hover td {
 }
 .field-control-input-suffix input {
   padding-right: 1.5rem;
+  box-sizing: border-box;
+}
+#wickDeviationPct {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+.field-control-input-suffix input[type="number"]::-webkit-inner-spin-button,
+.field-control-input-suffix input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.field-control-input-suffix input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 /* Label icons (in labels next to field text, and in switch headers) */

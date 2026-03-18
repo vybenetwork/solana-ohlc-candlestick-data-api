@@ -740,6 +740,15 @@ function getRemoteTradesForDisplay(): VybeTrade[] {
   return lastRemoteTrades;
 }
 
+/** Trades to show in the table (and export). When "Rebuild from trades", filter by selected chart quote so table matches chart. */
+function getTradesForTableDisplay(): VybeTrade[] {
+  if (candlesSourceSelect?.value !== 'trades') return lastFilteredTrades;
+  const baseMint = mintAddressInput.value.trim();
+  const chartQuote = getSelectedChartQuoteMint();
+  if (!chartQuote) return lastFilteredTrades;
+  return lastFilteredTrades.filter((t) => otherMint(t, baseMint) === chartQuote);
+}
+
 const TOP_QUOTE_MINTS_FOR_FILTER = 10;
 
 /** Observed min/max from last fetch, used to lock per-quote inputs. */
@@ -2286,12 +2295,13 @@ async function onFetch(): Promise<void> {
           const pageProgressStr = `Page ${pageIndex}/${pages.length} · ${allTrades.length.toLocaleString()} records`;
           if (candlesPagesProgress) candlesPagesProgress.textContent = pageProgressStr;
           if (tradesLoadingText) tradesLoadingText.textContent = pageProgressStr;
-          renderTrades(lastFilteredTrades, {
+          const tableTrades = getTradesForTableDisplay();
+          renderTrades(tableTrades, {
             remoteCount: remoteForDisplay.length,
-            filteredCount: lastFilteredTrades.length,
+            filteredCount: tableTrades.length,
             query: pages.length > 1 ? `pages ${pageFrom}..${p}` : `page ${p}`,
           });
-          exportBtn.disabled = lastFilteredTrades.length === 0;
+          exportBtn.disabled = tableTrades.length === 0;
           exportAllBtn.disabled = remoteForDisplay.length === 0;
           if (useRebuildCandles) {
             if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
@@ -2311,12 +2321,13 @@ async function onFetch(): Promise<void> {
     await ensureQuoteSymbols(lastFilteredTrades, mintAddressInput.value.trim());
     await ensureSymbolsForTrades(lastFilteredTrades);
     await ensureProgramLabels(lastFilteredTrades);
-    renderTrades(lastFilteredTrades, {
+    const tableTrades = getTradesForTableDisplay();
+    renderTrades(tableTrades, {
       remoteCount: fullRemoteForDisplay.length,
-      filteredCount: lastFilteredTrades.length,
+      filteredCount: tableTrades.length,
       query: pages.length > 1 ? `pages=${pages[0]}..${pages[pages.length - 1]}` : `page=${pages[0]}`,
     });
-    exportBtn.disabled = lastFilteredTrades.length === 0;
+    exportBtn.disabled = tableTrades.length === 0;
     exportAllBtn.disabled = lastRemoteTrades.length === 0;
     buildLocalFilterRows(fullRemoteForDisplay);
     if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
@@ -2350,12 +2361,13 @@ function onLocalFilterChange(): void {
     }
     void refreshCandles(lastFilteredTrades);
   }
-  renderTrades(lastFilteredTrades, {
+  const tableTrades = getTradesForTableDisplay();
+  renderTrades(tableTrades, {
     remoteCount: remoteForDisplay.length,
-    filteredCount: lastFilteredTrades.length,
+    filteredCount: tableTrades.length,
     query: '',
   });
-  exportBtn.disabled = lastFilteredTrades.length === 0;
+  exportBtn.disabled = tableTrades.length === 0;
   buildLocalFilterRows();
   if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
     void refreshCandles(lastFilteredTrades);
@@ -2375,7 +2387,7 @@ fetchBtn.addEventListener('click', () => {
 
 exportBtn.addEventListener('click', () => {
   const page = Math.max(0, Math.trunc(Number(pageFromInput.value || '0')));
-  const csv = toCsv(lastFilteredTrades);
+  const csv = toCsv(getTradesForTableDisplay());
   downloadCsv(`trades-page-${page}.csv`, csv);
 });
 
