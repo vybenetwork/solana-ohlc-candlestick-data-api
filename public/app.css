@@ -207,7 +207,27 @@ header h1 {
 }
 
 #mintAddress {
-  min-width: 520px;
+  max-width: 420px;
+  min-width: 420px;
+}
+
+.candles-mint-resolution-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.candles-mint-resolution-row .field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.candles-mint-resolution-row .field:first-child {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+.candles-mint-resolution-row #remoteNoGapsTarget {
+  flex: 0 0 auto;
+  align-self: flex-end;
 }
 
 #limit {
@@ -723,8 +743,8 @@ button:disabled {
   left: 12px;
   z-index: 10;
   pointer-events: none;
-  width: 152px;
-  height: 175px;
+  width: 170px;
+  height: 160px;
   box-sizing: border-box;
   font-size: 11px;
   line-height: 1.35;

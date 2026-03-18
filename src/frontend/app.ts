@@ -85,7 +85,7 @@ const sortSelect = document.getElementById('sort') as HTMLSelectElement;
 const pageFromInput = document.getElementById('pageFrom') as HTMLInputElement;
 const pageToInput = document.getElementById('pageTo') as HTMLInputElement;
 const eliminateCloseToOpenGapsCheckbox = document.getElementById('eliminateCloseToOpenGaps') as HTMLInputElement | null;
-const maxPagesInput = document.getElementById('maxPages') as HTMLInputElement;
+const maxPagesInput = document.getElementById('maxPages') as HTMLInputElement | null;
 
 const fetchBtn = document.getElementById('fetchBtn') as HTMLButtonElement;
 const exportBtn = document.getElementById('exportBtn') as HTMLButtonElement;
@@ -1777,8 +1777,8 @@ function renderCandles(candles: Candle[]): void {
 
 function updateCandlesChartOverlay(symbol: string, name: string, lastCandle: Candle | null): void {
   if (!candlesChartOverlay) return;
-  let html = `<div class="overlay-symbol">${escapeHtml(symbol)}</div>`;
-  html += `<div class="overlay-name">${escapeHtml(name)}</div>`;
+  const titleText = symbol === name ? name : `${name} (${symbol})`;
+  let html = `<div class="overlay-symbol">${escapeHtml(titleText)}</div>`;
   if (lastCandle) {
     const o = formatPriceForChart(lastCandle.open);
     const h = formatPriceForChart(lastCandle.high);
@@ -2260,7 +2260,10 @@ async function onFetch(): Promise<void> {
     }
 
     const pageFrom = parseIntOrUndefined(pageFromInput.value) ?? 0;
-    const N = Math.min(20, Math.max(1, parseInt(String(candlesPagesInput?.value), 10) || 10));
+    const N =
+      candlesSource === 'full' || candlesSource === 'market'
+        ? 1
+        : Math.min(20, Math.max(1, parseInt(String(candlesPagesInput?.value), 10) || 10));
     const pages = Array.from({ length: N }, (_, i) => pageFrom + i);
 
     let allTrades: VybeTrade[] = [];
@@ -2309,7 +2312,7 @@ async function onFetch(): Promise<void> {
             if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
               buildChartQuotesRadios();
             }
-            // Build per-quote rows (and apply wick filter when on) after each page so chart and quote table use filtered data per fetch.
+            // Build per-quote rows (and wick-filtered data) using current chart quote selection so first fetch applies filter.
             buildLocalFilterRows();
             if (candlesResolutionSelect && candlesChartEl) void refreshCandles(lastFilteredTrades);
           }
@@ -2331,10 +2334,10 @@ async function onFetch(): Promise<void> {
     });
     exportBtn.disabled = tableTrades.length === 0;
     exportAllBtn.disabled = lastRemoteTrades.length === 0;
-    buildLocalFilterRows(fullRemoteForDisplay);
     if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
       buildChartQuotesRadios();
     }
+    buildLocalFilterRows(fullRemoteForDisplay);
     // Refresh chart: for trades mode use final wick-filtered data; for full/market only if we didn't fetch candles in the loop.
     if (candlesSourceSelect?.value === 'trades' && candlesResolutionSelect && candlesChartEl) {
       void refreshCandles();
@@ -2406,7 +2409,7 @@ exportAllBtn.addEventListener('click', async () => {
   try {
     const query = buildTradesQueryForTable();
     const limit = Number(limitSelect.value) || 1000;
-    const maxPages = Math.max(1, Math.trunc(Number(maxPagesInput.value || '50')));
+    const maxPages = Math.max(1, Math.trunc(Number(maxPagesInput?.value || '50')));
 
     // Export pulls pages starting from pageFrom.
     const startPage = Math.max(0, Math.trunc(Number(pageFromInput.value || '0')));

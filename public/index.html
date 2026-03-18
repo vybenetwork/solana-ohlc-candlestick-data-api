@@ -55,19 +55,63 @@
           </div>
         </div>
 
-        <div class="field">
-          <label for="mintAddress">
-            <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
-            Token mint (either side)
-          </label>
-          <div class="field-control">
-            <span class="field-icon icon-tag" aria-hidden="true"></span>
-            <input
-              type="text"
-              id="mintAddress"
-              placeholder="e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
-              value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
-            />
+        <div class="candles-mint-resolution-row">
+          <div class="field">
+            <label for="mintAddress">
+              <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
+              Token mint (either side)
+            </label>
+            <div class="field-control">
+              <span class="field-icon icon-tag" aria-hidden="true"></span>
+              <input
+                type="text"
+                id="mintAddress"
+                placeholder="e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+                value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label for="candlesResolution">
+              <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+              Candle resolution
+            </label>
+            <div class="field-control">
+              <span class="field-icon icon-grid" aria-hidden="true"></span>
+              <select id="candlesResolution">
+                <option value="1m" selected>1m</option>
+                <option value="3m">3m</option>
+                <option value="5m">5m</option>
+                <option value="15m">15m</option>
+                <option value="30m">30m</option>
+                <option value="1h">1h</option>
+                <option value="2h">2h</option>
+                <option value="3h">3h</option>
+                <option value="4h">4h</option>
+                <option value="1d">1d</option>
+                <option value="1w">1w</option>
+                <option value="1mo">1mo</option>
+                <option value="1y">1y</option>
+              </select>
+            </div>
+          </div>
+          <div id="remoteNoGapsTarget">
+            <div id="noGapsSwitchWrap" class="field field-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+              <div class="field-switch-header">
+                <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                <span class="field-switch-title">No gaps</span>
+                <span class="field-switch-info icon-info-wrap" title="Eliminate gaps between candles by using previous close as next open. Default is true." aria-label="More info">
+                  <span class="label-icon field-icon icon-info" aria-hidden="true" title="Eliminate gaps between candles by using previous close as next open. Default is true."></span>
+                </span>
+              </div>
+              <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+                <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
+                <span class="trades-fetch-switch-track">
+                  <span class="trades-fetch-switch-option" data-value="off">Show Gaps</span>
+                  <span class="trades-fetch-switch-option" data-value="on">On</span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -90,31 +134,6 @@
           <div class="field-control">
             <span class="field-icon icon-clock" aria-hidden="true"></span>
             <input type="datetime-local" id="timeEnd" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="candlesResolution">
-            <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
-            Candle resolution
-          </label>
-          <div class="field-control">
-            <span class="field-icon icon-grid" aria-hidden="true"></span>
-            <select id="candlesResolution">
-              <option value="1m" selected>1m</option>
-              <option value="3m">3m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="30m">30m</option>
-              <option value="1h">1h</option>
-              <option value="2h">2h</option>
-              <option value="3h">3h</option>
-              <option value="4h">4h</option>
-              <option value="1d">1d</option>
-              <option value="1w">1w</option>
-              <option value="1mo">1mo</option>
-              <option value="1y">1y</option>
-            </select>
           </div>
         </div>
 
@@ -165,36 +184,6 @@
               <option value="500">500</option>
               <option value="1000" selected>1000</option>
             </select>
-          </div>
-        </div>
-
-        <div id="remoteNoGapsTarget">
-          <div id="noGapsSwitchWrap" class="field field-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
-            <div class="field-switch-header">
-              <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
-              <span class="field-switch-title">No gaps</span>
-              <span class="field-switch-info icon-info-wrap" title="Eliminate gaps between candles by using previous close as next open. Default is true." aria-label="More info">
-                <span class="label-icon field-icon icon-info" aria-hidden="true" title="Eliminate gaps between candles by using previous close as next open. Default is true."></span>
-              </span>
-            </div>
-            <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
-              <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
-              <span class="trades-fetch-switch-track">
-                <span class="trades-fetch-switch-option" data-value="off">Show Gaps</span>
-                <span class="trades-fetch-switch-option" data-value="on">On</span>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="maxPages" title="When using Export paginated CSV, stop after this many pages.">
-            <span class="label-icon field-icon icon-download" aria-hidden="true"></span>
-            Max pages
-          </label>
-          <div class="field-control">
-            <span class="field-icon icon-download" aria-hidden="true"></span>
-            <input type="number" id="maxPages" min="1" step="1" value="50" title="When using Export paginated CSV, stop after this many pages." />
           </div>
         </div>
 
@@ -354,7 +343,7 @@
                   </span>
                 </div>
                 <div class="field-control field-control-input-suffix">
-                  <input type="number" id="wickDeviationPct" min="0" max="100" step="0.01" value="0.99" placeholder="0.99" style="width:100%;max-width:4rem;" aria-label="Deviation percent" />
+                  <input type="number" id="wickDeviationPct" min="0" max="100" step="1" value="0.50" placeholder="0.50" style="width:100%;max-width:4rem;" aria-label="Deviation percent" />
                   <span class="input-suffix" aria-hidden="true">%</span>
                 </div>
               </div>
