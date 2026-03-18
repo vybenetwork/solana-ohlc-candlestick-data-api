@@ -135,6 +135,7 @@ const tokenUpdateTime = document.getElementById('tokenUpdateTime') as HTMLElemen
 
 
 const candlesLoading = document.getElementById('candlesLoading') as HTMLElement | null;
+const candlesLoadingText = document.getElementById('candlesLoadingText') as HTMLElement | null;
 const candlesError = document.getElementById('candlesError') as HTMLElement | null;
 const candlesResolutionSelect = document.getElementById('candlesResolution') as HTMLSelectElement | null;
 const candlesSourceSelect = document.getElementById('candlesSourceSelect') as HTMLSelectElement | null;
@@ -147,6 +148,7 @@ const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElemen
 const chartQuoteSelect = document.getElementById('chartQuoteSelect') as HTMLSelectElement | null;
 const perQuoteSectionEl = document.getElementById('perQuoteSection');
 const rebuildLoading = document.getElementById('rebuildLoading') as HTMLElement | null;
+const rebuildLoadingText = document.getElementById('rebuildLoadingText') as HTMLElement | null;
 const localNoGapsTarget = document.getElementById('localNoGapsTarget');
 const remoteNoGapsTarget = document.getElementById('remoteNoGapsTarget');
 const noGapsSwitchWrap = document.getElementById('noGapsSwitchWrap');
@@ -2364,6 +2366,8 @@ async function onFetch(): Promise<void> {
             : `Page ${i + 1}/${pages.length} · fetching…`;
         if (candlesPagesProgress) candlesPagesProgress.textContent = progressStr;
         if (tradesLoadingText) tradesLoadingText.textContent = progressStr;
+        if (candlesLoadingText) candlesLoadingText.textContent = progressStr;
+        if (rebuildLoadingText) rebuildLoadingText.textContent = progressStr;
         const query = buildTradesQueryForTable(p);
         const url = `/api/trades?${query}`;
         const res = await fetchWithRetry(url);
@@ -2389,6 +2393,8 @@ async function onFetch(): Promise<void> {
           const pageProgressStr = `Page ${pageIndex}/${pages.length} · ${allTrades.length.toLocaleString()} records`;
           if (candlesPagesProgress) candlesPagesProgress.textContent = pageProgressStr;
           if (tradesLoadingText) tradesLoadingText.textContent = pageProgressStr;
+          if (candlesLoadingText) candlesLoadingText.textContent = pageProgressStr;
+          if (rebuildLoadingText) rebuildLoadingText.textContent = pageProgressStr;
           const tableTrades = getTradesForTableDisplay();
           renderTrades(tableTrades, {
             remoteCount: remoteForDisplay.length,
@@ -2447,6 +2453,8 @@ async function onFetch(): Promise<void> {
   } finally {
     if (candlesPagesProgress) candlesPagesProgress.textContent = '';
     if (tradesLoadingText) tradesLoadingText.textContent = 'Loading…';
+    if (candlesLoadingText) candlesLoadingText.textContent = 'Loading…';
+    if (rebuildLoadingText) rebuildLoadingText.textContent = 'Loading…';
     fetchBtn.disabled = false;
     loadingIndicator.hidden = true;
     loadingIndicator.setAttribute('aria-hidden', 'true');
