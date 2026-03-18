@@ -740,14 +740,6 @@ function getRemoteTradesForDisplay(): VybeTrade[] {
   return lastRemoteTrades;
 }
 
-/** When "Rebuild from trades", restrict to the selected chart quote so table and chart stay in sync. */
-function applyChartQuoteFilter(trades: VybeTrade[]): VybeTrade[] {
-  if (candlesSourceSelect?.value !== 'trades') return trades;
-  const baseMint = mintAddressInput.value.trim();
-  const chartQuote = getSelectedChartQuoteMint();
-  return trades.filter((t) => otherMint(t, baseMint) === chartQuote);
-}
-
 const TOP_QUOTE_MINTS_FOR_FILTER = 10;
 
 /** Observed min/max from last fetch, used to lock per-quote inputs. */
@@ -1844,6 +1836,8 @@ async function refreshCandles(tradesSnapshot?: VybeTrade[]): Promise<void> {
       } else {
         tradesToUse = tradesSnapshot ?? lastFilteredTrades;
       }
+      const chartQuote = getSelectedChartQuoteMint();
+      if (chartQuote) tradesToUse = tradesToUse.filter((t) => otherMint(t, mint) === chartQuote);
       candles = buildCandlesFromTrades(tradesToUse, resolution, mint);
       if (eliminateCloseToOpenGapsCheckbox?.checked && candles.length > 0) {
         for (let i = 1; i < candles.length; i++) candles[i].open = candles[i - 1].close;
@@ -2285,8 +2279,7 @@ async function onFetch(): Promise<void> {
         // Update table and UI after each page so trades appear as they arrive (all modes).
         if (allTrades.length > 0) {
           lastRemoteTrades = [...allTrades];
-          let remoteForDisplay = getRemoteTradesForDisplay();
-          remoteForDisplay = applyChartQuoteFilter(remoteForDisplay);
+          const remoteForDisplay = getRemoteTradesForDisplay();
           lastFilteredTrades = applyLocalFilters(remoteForDisplay);
           lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(remoteForDisplay);
           const pageIndex = i + 1;
@@ -2313,14 +2306,13 @@ async function onFetch(): Promise<void> {
 
     lastRemoteTrades = allTrades;
     const fullRemoteForDisplay = getRemoteTradesForDisplay();
-    let remoteForDisplay = applyChartQuoteFilter(fullRemoteForDisplay);
-    lastFilteredTrades = applyLocalFilters(remoteForDisplay);
-    lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(remoteForDisplay);
+    lastFilteredTrades = applyLocalFilters(fullRemoteForDisplay);
+    lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(fullRemoteForDisplay);
     await ensureQuoteSymbols(lastFilteredTrades, mintAddressInput.value.trim());
     await ensureSymbolsForTrades(lastFilteredTrades);
     await ensureProgramLabels(lastFilteredTrades);
     renderTrades(lastFilteredTrades, {
-      remoteCount: remoteForDisplay.length,
+      remoteCount: fullRemoteForDisplay.length,
       filteredCount: lastFilteredTrades.length,
       query: pages.length > 1 ? `pages=${pages[0]}..${pages[pages.length - 1]}` : `page=${pages[0]}`,
     });
@@ -2348,8 +2340,7 @@ async function onFetch(): Promise<void> {
 }
 
 function onLocalFilterChange(): void {
-  let remoteForDisplay = getRemoteTradesForDisplay();
-  remoteForDisplay = applyChartQuoteFilter(remoteForDisplay);
+  const remoteForDisplay = getRemoteTradesForDisplay();
   lastFilteredTrades = applyLocalFilters(remoteForDisplay);
   lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(remoteForDisplay);
   if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {

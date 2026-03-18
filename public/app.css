@@ -256,7 +256,7 @@ header h1 {
 }
 
 .local-filters-panel .section-header {
-  margin-bottom: 10px;
+  margin-bottom: 0.75rem;
 }
 .remote-filters-help {
   margin: 0.5rem 0 0.5rem;
@@ -1362,7 +1362,12 @@ tr:hover td {
 .local-filters-row-type-checkbox .field-switch {
   min-width: 0;
   justify-content: flex-end;
-  margin-left: 0;
+  margin-right: 14px;
+}
+.local-filters-row-type-checkbox #localNoGapsTarget .field-switch,
+.local-filters-row-type-checkbox #filterWicksWrap {
+  max-width: 226px;
+  min-width: 90px;
 }
 .local-filters-row-type-checkbox .field-switch-header {
   align-items: center;
