@@ -54,18 +54,30 @@
 
         <div class="candles-mint-resolution-row">
           <div class="field">
-            <label for="mintAddress">
-              <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
-              Market Address
-            </label>
-            <div class="field-control">
-              <span class="field-icon icon-tag" aria-hidden="true"></span>
-              <input
-                type="text"
-                id="mintAddress"
-                placeholder="Market / pool address"
-                value="6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp"
-              />
+            <div id="tokenMintWrap">
+              <label for="mintAddress">
+                <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
+                Token mint (either side)
+              </label>
+              <div class="field-control">
+                <span class="field-icon icon-tag" aria-hidden="true"></span>
+                <input
+                  type="text"
+                  id="mintAddress"
+                  placeholder="e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+                  value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+                />
+              </div>
+            </div>
+            <div class="candles-market-address-wrap" id="candlesMarketAddressWrap" hidden>
+              <label for="candlesMarketAddress">
+                <span class="label-icon field-icon icon-tag" aria-hidden="true"></span>
+                Market Address
+              </label>
+              <div class="field-control">
+                <span class="field-icon icon-tag" aria-hidden="true"></span>
+                <input type="text" id="candlesMarketAddress" class="candles-market-address-input" placeholder="Market / pool address" value="6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp" title="Vybe market address for GET /v4/markets/{marketAddress}/candles" />
+              </div>
             </div>
           </div>
           <div class="field">

@@ -139,6 +139,9 @@ const candlesLoadingText = document.getElementById('candlesLoadingText') as HTML
 const candlesError = document.getElementById('candlesError') as HTMLElement | null;
 const candlesResolutionSelect = document.getElementById('candlesResolution') as HTMLSelectElement | null;
 const candlesSourceSelect = document.getElementById('candlesSourceSelect') as HTMLSelectElement | null;
+const candlesMarketAddressInput = document.getElementById('candlesMarketAddress') as HTMLInputElement | null;
+const candlesMarketAddressWrap = document.getElementById('candlesMarketAddressWrap') as HTMLElement | null;
+const tokenMintWrap = document.getElementById('tokenMintWrap') as HTMLElement | null;
 const candlesPagesInput = document.getElementById('candlesPages') as HTMLSelectElement | null;
 const candlesPagesWrap = document.getElementById('candlesPagesWrap') as HTMLElement | null;
 const candlesPagesProgress = document.getElementById('candlesPagesProgress') as HTMLElement | null;
@@ -1912,7 +1915,7 @@ async function refreshCandles(tradesSnapshot?: VybeTrade[]): Promise<void> {
         candlesError.removeAttribute('aria-hidden');
       }
     } else if (useMarket) {
-      const marketAddress = mintAddressInput.value.trim();
+      const marketAddress = candlesMarketAddressInput?.value.trim() ?? '';
       if (!marketAddress) {
         if (candlesError) {
           candlesError.textContent = 'Enter a market address for Vybe OHLC by Market API.';
@@ -2273,10 +2276,11 @@ function getChartCandles(): Candle[] {
 function setExportButtonsState(): void {
   const candles = getChartCandles();
   const source = candlesSourceSelect?.value ?? 'full';
-  const marketAddress = mintAddressInput?.value?.trim() ?? '';
+  const mint = mintAddressInput?.value?.trim() ?? '';
+  const marketAddress = candlesMarketAddressInput?.value?.trim() ?? '';
   exportBtn.disabled = candles.length === 0;
   exportAllBtn.disabled =
-    candles.length === 0 && !(source === 'full' && marketAddress) && !(source === 'market' && marketAddress);
+    candles.length === 0 && !(source === 'full' && mint) && !(source === 'market' && marketAddress);
 }
 
 function candlesToCsv(candles: Candle[]): string {
@@ -2349,7 +2353,7 @@ async function onFetch(): Promise<void> {
     const fetchedCandlesAtStart =
       candlesResolutionSelect &&
       candlesChartEl &&
-      ((candlesSource === 'full' && !!mint) || (candlesSource === 'market' && !!mintAddressInput.value.trim()));
+      ((candlesSource === 'full' && !!mint) || (candlesSource === 'market' && !!candlesMarketAddressInput?.value.trim()));
     if (fetchedCandlesAtStart) {
       await refreshCandles();
     }
@@ -2522,7 +2526,8 @@ exportAllBtn.addEventListener('click', async () => {
   clearError();
   const source = candlesSourceSelect?.value ?? 'full';
   const resolution = candlesResolutionSelect?.value || '1m';
-  const marketAddress = mintAddressInput?.value?.trim() ?? '';
+  const mint = mintAddressInput?.value?.trim() ?? '';
+  const marketAddress = candlesMarketAddressInput?.value?.trim() ?? '';
 
   if (source === 'trades') {
     const candles = getChartCandles();
@@ -2535,8 +2540,8 @@ exportAllBtn.addEventListener('click', async () => {
     return;
   }
 
-  if (source === 'full' && !marketAddress) {
-    showError('Enter a market address or token mint for Vybe API: OHLC Vetted Markets.');
+  if (source === 'full' && !mint) {
+    showError('Enter a token mint for Vybe API: OHLC Vetted Markets.');
     return;
   }
   if (source === 'market' && !marketAddress) {
@@ -2557,7 +2562,7 @@ exportAllBtn.addEventListener('click', async () => {
       const chunk =
         source === 'market'
           ? await fetchCandlesFromMarketApi(marketAddress, resolution, page)
-          : await fetchCandlesFromApi(marketAddress, resolution, page);
+          : await fetchCandlesFromApi(mint, resolution, page);
       allCandles.push(...chunk);
       if (chunk.length < limit) break;
     }
@@ -2639,12 +2644,15 @@ if (candlesResolutionSelect) {
 function updateCandlesPagesVisibility(): void {
   const source = candlesSourceSelect?.value ?? 'full';
   const showTradesParams = source === 'trades';
+  const showMarketAddress = source === 'market';
   if (candlesPagesWrap) candlesPagesWrap.hidden = !showTradesParams;
   if (chartQuotesWrap) chartQuotesWrap.hidden = !showTradesParams;
   if (perQuoteSectionEl) {
     perQuoteSectionEl.hidden = !showTradesParams;
     perQuoteSectionEl.setAttribute('aria-hidden', String(showTradesParams ? 'false' : 'true'));
   }
+  if (tokenMintWrap) tokenMintWrap.hidden = showMarketAddress;
+  if (candlesMarketAddressWrap) candlesMarketAddressWrap.hidden = !showMarketAddress;
 }
 
 /** All quote mints in filtered trades with counts, sorted by count desc. Used for chart quote dropdowns. */
@@ -2723,6 +2731,9 @@ function moveNoGapsSwitchToRebuildSection(): void {
   if (noGapsSwitchWrap.parentElement !== target) target.appendChild(noGapsSwitchWrap);
 }
 moveNoGapsSwitchToRebuildSection();
+const isMarket = candlesSourceSelect?.value === 'market';
+if (tokenMintWrap) tokenMintWrap.hidden = !!isMarket;
+if (candlesMarketAddressWrap) candlesMarketAddressWrap.hidden = !isMarket;
 buildChartQuotesRadios();
 if (chartQuoteSelect) {
   chartQuoteSelect.addEventListener('change', () => {

@@ -600,16 +600,11 @@ button:disabled {
 }
 .candles-market-address-wrap {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.35rem;
 }
 .candles-market-address-wrap[hidden] {
   display: none !important;
-}
-.candles-market-address-label {
-  font-size: 0.8rem;
-  color: #a1a1aa;
-  white-space: nowrap;
 }
 .candles-market-address-input {
   width: 20rem;
