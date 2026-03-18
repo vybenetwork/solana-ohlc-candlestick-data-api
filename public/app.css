@@ -1461,6 +1461,9 @@ tr:hover td {
   padding: 0.2rem 0.35rem;
   white-space: nowrap;
 }
+.local-filters-dynamic thead th {
+  text-align: center;
+}
 
 .local-filters-dynamic th:first-child,
 .local-filters-dynamic td:first-child {

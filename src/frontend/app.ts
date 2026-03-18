@@ -232,7 +232,7 @@ const VYBE_OHLC_FULL_ALLOWED_QUOTE_MINTS = new Set<string>([
 
 /** Chart quote options: up to 5 selectable. Default all selected. */
 const CHART_QUOTE_OPTIONS: { mint: string; label: string }[] = [
-  { mint: 'So11111111111111111111111111111111111111112', label: 'SOL' },
+  { mint: 'So11111111111111111111111111111111111111112', label: 'WSOL' },
   { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', label: 'USDC' },
   { mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', label: 'USDT' },
   { mint: 'EVLXHuz4aM57CiqMhPgZpzurwBGvxeZBBAGSVFAfsmN', label: 'USDT1' },
@@ -928,6 +928,7 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
   const topQuotesForTable = selectedChartMint
     ? ([[selectedChartMint, totalQuoteCounts.get(selectedChartMint) ?? 0]] as [string, number][])
     : topQuotes;
+  const hasNoTradesYet = totalQuoteCounts.size === 0;
 
   function quoteLabel(mint: string): string {
     return quoteSymbolCache[mint] || HARDCODED_QUOTE_MINTS[mint] || truncate(mint, 4, 4);
@@ -976,12 +977,37 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
   perQuoteFiltersContainer.innerHTML = '';
   const table = document.createElement('table');
   table.innerHTML = `<thead><tr><th>Quote</th><th style="text-align:center">Select All</th><th>Score</th><th>High</th><th>Low</th><th>Min price</th><th>Max price</th></tr></thead><tbody></tbody>`;
-  if (topQuotesForTable.length === 0) {
+  if (topQuotesForTable.length === 0 || hasNoTradesYet) {
     const tbody = table.querySelector('tbody')!;
-    const placeholderRow = document.createElement('tr');
-    placeholderRow.className = 'per-quote-placeholder-row';
-    placeholderRow.innerHTML = '<td colspan="7" style="text-align:center;color:#71717a;padding:0.5rem;">—</td>';
-    tbody.appendChild(placeholderRow);
+    const placeholderQuoteMint = getSelectedChartQuoteMint();
+    const placeholderLabel =
+      CHART_QUOTE_OPTIONS.find((o) => o.mint === placeholderQuoteMint)?.label ??
+      HARDCODED_QUOTE_MINTS[placeholderQuoteMint] ??
+      truncate(placeholderQuoteMint, 4, 4);
+    const mainRow = document.createElement('tr');
+    mainRow.dataset.quoteMint = placeholderQuoteMint;
+    mainRow.innerHTML = `
+      <td title="${placeholderQuoteMint}"><div>${escapeHtml(placeholderLabel)}</div><div class="meta">(0/0)</div></td>
+      <td style="text-align:center"><label class="per-quote-status"><input type="checkbox" class="per-quote-exclude" checked aria-label="Include ${escapeHtml(placeholderLabel)}" /><span class="per-quote-status-text">Included</span></label></td>
+      <td class="per-quote-main-wick-cell">—</td>
+      <td class="per-quote-main-price-cell">—</td>
+      <td class="per-quote-main-price-cell">—</td>
+      <td class="per-quote-main-price-cell">—</td>
+      <td class="per-quote-main-price-cell">—</td>
+    `;
+    tbody.appendChild(mainRow);
+    const subRow = document.createElement('tr');
+    subRow.className = 'per-quote-market-row';
+    subRow.innerHTML = `
+      <td class="per-quote-market-cell"><span class="per-quote-market-indent"></span>—</td>
+      <td class="per-quote-market-status-cell" style="text-align:center">—</td>
+      <td class="per-quote-wick-cell per-quote-score-cell">—</td>
+      <td class="per-quote-market-details">—</td>
+      <td class="per-quote-market-details">—</td>
+      <td class="per-quote-market-details">—</td>
+      <td class="per-quote-market-details">—</td>
+    `;
+    tbody.appendChild(subRow);
     perQuoteFiltersContainer.appendChild(table);
     return;
   }
@@ -1010,7 +1036,7 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
     headerActionRow.appendChild(headerActionCell);
     thead.insertBefore(headerActionRow, thead.firstChild);
     const tbody = table.querySelector('tbody')!;
-    const TOP_VISIBLE = 20;
+    const TOP_VISIBLE = 100000; /* show all quote rows and market sub-rows */
     for (let i = 0; i < topQuotesForTable.length; i++) {
       const [quoteMint, count] = topQuotesForTable[i];
       const b = quoteBounds[quoteMint];
@@ -1244,6 +1270,30 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
         wickFilteredTradesByQuote.set(quoteMint, tradesForQuoteToUse);
       } else {
         wickFilteredTradesByQuote.set(quoteMint, tradesForQuote);
+      }
+
+      // When filter wicks is on, auto-exclude low-count or low-rank markets.
+      if (filterWicksCheckbox?.checked && combinedByMarket.length > 0) {
+        if (combinedByMarket.length > 10) {
+          // More than 10 pools: include only the top 5 by count, and only if count >= 50.
+          const MIN_COUNT_TOP5 = 50;
+          const top5 = combinedByMarket.slice(0, 5);
+          for (const entry of top5) {
+            if (entry.totalCount >= MIN_COUNT_TOP5) excludedMarkets.delete(entry.marketAddress);
+          }
+          for (const entry of combinedByMarket) {
+            const inTop5 = top5.includes(entry);
+            if (!inTop5 || entry.totalCount < MIN_COUNT_TOP5) excludedMarkets.add(entry.marketAddress);
+          }
+        } else if (combinedByMarket.length > 1) {
+          // 2–10 pools: exclude if < 10% of max count or count < 10. Single market: exclude nothing.
+          const MIN_COUNT = 10;
+          const maxCount = Math.max(...combinedByMarket.map((e) => e.totalCount));
+          const threshold = maxCount * 0.1;
+          for (const entry of combinedByMarket) {
+            if (entry.totalCount < threshold || entry.totalCount < MIN_COUNT) excludedMarkets.add(entry.marketAddress);
+          }
+        }
       }
 
       combinedByMarket.forEach((entry, idx) => {
@@ -2527,7 +2577,8 @@ function getChartQuoteOptionsWithCounts(): { mint: string; label: string; count:
   }
   const list = [...counts.entries()]
     .map(([mint, count]) => {
-      let label = quoteSymOrTrunc(mint);
+      let label =
+        CHART_QUOTE_OPTIONS.find((o) => o.mint === mint)?.label ?? quoteSymOrTrunc(mint);
       if (!label || label === '—') label = truncate(mint, 4, 4);
       return { mint, label, count };
     })
@@ -2583,6 +2634,7 @@ if (perQuoteSectionEl) {
   const showParams = candlesSourceSelect?.value === 'trades';
   perQuoteSectionEl.hidden = !showParams;
   perQuoteSectionEl.setAttribute('aria-hidden', showParams ? 'false' : 'true');
+  if (showParams) buildLocalFilterRows();
 }
 function moveNoGapsSwitchToRebuildSection(): void {
   if (!noGapsSwitchWrap || !localNoGapsTarget || !remoteNoGapsTarget) return;
