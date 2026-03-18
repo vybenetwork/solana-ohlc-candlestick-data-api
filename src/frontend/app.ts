@@ -12,6 +12,7 @@ declare const LightweightCharts: {
   createChart: (container: HTMLElement, options?: unknown) => {
     addCandlestickSeries: (options?: unknown) => {
       setData: (data: Array<{ time: number; open: number; high: number; low: number; close: number }>) => void;
+      update: (bar: { time: number; open: number; high: number; low: number; close: number }) => void;
     };
     subscribeCrosshairMove: (callback: (param: CrosshairParam) => void) => void;
     timeScale: () => {
@@ -145,6 +146,7 @@ const candlesPagesProgress = document.getElementById('candlesPagesProgress') as 
 const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElement | null;
 const chartQuoteSelect = document.getElementById('chartQuoteSelect') as HTMLSelectElement | null;
 const perQuoteSectionEl = document.getElementById('perQuoteSection');
+const rebuildLoading = document.getElementById('rebuildLoading') as HTMLElement | null;
 const localNoGapsTarget = document.getElementById('localNoGapsTarget');
 const remoteNoGapsTarget = document.getElementById('remoteNoGapsTarget');
 const noGapsSwitchWrap = document.getElementById('noGapsSwitchWrap');
@@ -182,7 +184,7 @@ let lastMarketToQuote = new Map<string, string>();
 let candlesChart:
   | {
       resize: (width: number, height: number) => void;
-      addCandlestickSeries: (options?: unknown) => { setData: (data: Candle[]) => void };
+      addCandlestickSeries: (options?: unknown) => { setData: (data: Candle[]) => void; update: (bar: { time: number; open: number; high: number; low: number; close: number }) => void };
       subscribeCrosshairMove: (callback: (param: CrosshairParam) => void) => void;
       timeScale: () => {
         subscribeVisibleLogicalRangeChange: (callback: (range: { from: number; to: number } | null) => void) => void;
@@ -192,7 +194,7 @@ let candlesChart:
       };
     }
   | null = null;
-let candlesSeries: { setData: (data: Candle[]) => void } | null = null;
+let candlesSeries: { setData: (data: Candle[]) => void; update: (bar: { time: number; open: number; high: number; low: number; close: number }) => void } | null = null;
 let lastCandlesFromApi: Candle[] = [];
 let lastCandlesFromTrades: Candle[] = [];
 /** Number of bars currently on the chart; used to clamp scroll so we can't scroll past the oldest candle. */
@@ -1792,21 +1794,42 @@ function renderCandles(candles: Candle[]): void {
   if (!candlesChartEl) return;
   ensureCandlesChart();
   if (!candlesSeries) return;
+  const prevCandles = lastCandlesForTooltip;
+  const isAppendOnly =
+    prevCandles.length > 0 &&
+    candles.length > prevCandles.length &&
+    prevCandles.every(
+      (c, i) =>
+        candles[i] &&
+        candles[i].time === c.time &&
+        candles[i].open === c.open &&
+        candles[i].high === c.high &&
+        candles[i].low === c.low &&
+        candles[i].close === c.close
+    );
+  if (isAppendOnly) {
+    // Append only new bars so existing bars (and their wicks) are not re-rendered and stay visible.
+    for (let i = prevCandles.length; i < candles.length; i++) {
+      const c = candles[i]!;
+      candlesSeries.update({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close });
+    }
+  } else {
+    candlesSeries.setData(
+      candles.map((c) => ({
+        time: c.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      }))
+    );
+  }
   candlesBarCount = candles.length;
   lastCandlesForTooltip = candles;
-  candlesSeries.setData(
-    candles.map((c) => ({
-      time: c.time,
-      open: c.open,
-      high: c.high,
-      low: c.low,
-      close: c.close,
-    }))
-  );
   if (candlesChart && candlesBarCount > 0) {
     const timeScale = candlesChart.timeScale();
     if (candlesSourceSelect?.value === 'trades') {
-      timeScale.fitContent();
+      if (!isAppendOnly) timeScale.fitContent();
     } else {
       const currentRange = timeScale.getVisibleLogicalRange();
       const lastIndex = candlesBarCount - 1;
@@ -1893,7 +1916,9 @@ async function refreshCandles(tradesSnapshot?: VybeTrade[]): Promise<void> {
       if (filterWicksCheckbox?.checked) {
         const chartQuote = getSelectedChartQuoteMint();
         const filtered = chartQuote ? wickFilteredTradesByQuote.get(chartQuote) : undefined;
-        tradesToUse = filtered ?? (tradesSnapshot ?? lastFilteredTrades);
+        // Only use wick-filtered data when filter wicks is on; never paint unfiltered (avoids flash of wicks).
+        if (filtered === undefined) return;
+        tradesToUse = filtered;
       } else {
         tradesToUse = tradesSnapshot ?? lastFilteredTrades;
       }
@@ -2266,6 +2291,10 @@ async function onFetch(): Promise<void> {
   // Clear tables immediately so the user sees we're refetching.
   renderTrades([], { remoteCount: 0, filteredCount: 0, query: '' });
   perQuoteFiltersContainer.innerHTML = '';
+  // When rebuilding from trades with filter wicks on, clear chart so we never show stale or partial unfiltered wicks during fetch.
+  if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
+    renderCandles([]);
+  }
   // Reset per-quote state for new fetch.
   lastRemoteTrades = [];
   lastFilteredTrades = [];
@@ -2284,6 +2313,16 @@ async function onFetch(): Promise<void> {
   loadingIndicator.setAttribute('aria-hidden', 'false');
   tradesLoading.hidden = false;
   tradesLoading.setAttribute('aria-hidden', 'false');
+  if (candlesSourceSelect?.value === 'trades') {
+    if (candlesLoading) {
+      candlesLoading.hidden = false;
+      candlesLoading.setAttribute('aria-hidden', 'false');
+    }
+    if (rebuildLoading) {
+      rebuildLoading.hidden = false;
+      rebuildLoading.setAttribute('aria-hidden', 'false');
+    }
+  }
 
   try {
     // Reset UI back to empty placeholders before fetching.
@@ -2359,12 +2398,15 @@ async function onFetch(): Promise<void> {
           exportBtn.disabled = tableTrades.length === 0;
           exportAllBtn.disabled = remoteForDisplay.length === 0;
           if (useRebuildCandles) {
+            // Build per-quote rows (and wick-filtered data) before radios so any 'change' from buildChartQuotesRadios sees filtered data.
+            buildLocalFilterRows();
             if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
               buildChartQuotesRadios();
             }
-            // Build per-quote rows (and wick-filtered data) using current chart quote selection so first fetch applies filter.
-            buildLocalFilterRows();
-            if (candlesResolutionSelect && candlesChartEl) void refreshCandles(lastFilteredTrades);
+            // When filter wicks is on, do NOT update the chart per page — only update once at end of fetch to avoid any flash of unfiltered wicks.
+            if (candlesResolutionSelect && candlesChartEl && !filterWicksCheckbox?.checked) {
+              void refreshCandles(lastFilteredTrades);
+            }
           }
         }
     }
@@ -2384,13 +2426,19 @@ async function onFetch(): Promise<void> {
     });
     exportBtn.disabled = tableTrades.length === 0;
     exportAllBtn.disabled = lastRemoteTrades.length === 0;
+    // Build per-quote rows (and wick-filtered data) before radios so any 'change' from buildChartQuotesRadios sees filtered data.
+    buildLocalFilterRows(fullRemoteForDisplay);
     if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
       buildChartQuotesRadios();
     }
-    buildLocalFilterRows(fullRemoteForDisplay);
     // Refresh chart: for trades mode use final wick-filtered data; for full/market only if we didn't fetch candles in the loop.
     if (candlesSourceSelect?.value === 'trades' && candlesResolutionSelect && candlesChartEl) {
-      void refreshCandles();
+      if (filterWicksCheckbox?.checked) {
+        // Double rAF so chart paints after next frame and never shows a flash of unfiltered wicks.
+        requestAnimationFrame(() => requestAnimationFrame(() => refreshCandles()));
+      } else {
+        void refreshCandles();
+      }
     } else if (!fetchedCandlesAtStart && candlesResolutionSelect && candlesChartEl) {
       void refreshCandles();
     }
@@ -2404,6 +2452,14 @@ async function onFetch(): Promise<void> {
     loadingIndicator.setAttribute('aria-hidden', 'true');
     tradesLoading.hidden = true;
     tradesLoading.setAttribute('aria-hidden', 'true');
+    if (candlesLoading) {
+      candlesLoading.hidden = true;
+      candlesLoading.setAttribute('aria-hidden', 'true');
+    }
+    if (rebuildLoading) {
+      rebuildLoading.hidden = true;
+      rebuildLoading.setAttribute('aria-hidden', 'true');
+    }
   }
 }
 
@@ -2411,13 +2467,6 @@ function onLocalFilterChange(): void {
   const remoteForDisplay = getRemoteTradesForDisplay();
   lastFilteredTrades = applyLocalFilters(remoteForDisplay);
   lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(remoteForDisplay);
-  if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
-    if (candlesLoading) {
-      candlesLoading.hidden = false;
-      candlesLoading.setAttribute('aria-hidden', 'false');
-    }
-    void refreshCandles(lastFilteredTrades);
-  }
   const tableTrades = getTradesForTableDisplay();
   renderTrades(tableTrades, {
     remoteCount: remoteForDisplay.length,
@@ -2425,8 +2474,13 @@ function onLocalFilterChange(): void {
     query: '',
   });
   exportBtn.disabled = tableTrades.length === 0;
+  // Build wick-filtered data before refreshing chart so we never paint unfiltered wicks.
   buildLocalFilterRows();
-  if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
+  if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
+    if (candlesLoading) {
+      candlesLoading.hidden = false;
+      candlesLoading.setAttribute('aria-hidden', 'false');
+    }
     void refreshCandles(lastFilteredTrades);
   }
   if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
