@@ -1,157 +1,409 @@
 # Solana OHLC Candlestick Data API
 
-A **Solana OHLC API** and **candlestick API Solana** demo: retrieve Open, High, Low, Close (**OHLC**) **candlestick data** for any Solana token’s USD price, plus volume and trade count. Data is aggregated from vetted USDC, USDT, PYUSD, and wSOL markets so your **candlestick** charts avoid fake wicks and manipulated pools. This repo includes a **web app (GUI)** to display **OHLC candlestick** charts and market lists in the browser.
+This repository demonstrates how to use the Vybe Solana OHLC candlestick data API to fetch, display, and export Open, High, Low, Close (OHLC) candlestick data for any SPL token. It includes a production-ready Node.js backend and a modern frontend that show how to integrate Vybe’s token candles, market candles, and trades endpoints to explore candlestick charts from vetted markets, rebuild OHLC from trade history, or fetch by market address, with CSV export for downstream analysis.
 
-## Why This Matters
+Use this project as a reference implementation or starter kit for building Solana price charting UIs, backtesting pipelines, and on-chain candlestick data products powered by Vybe’s high-performance Solana OHLC API.
 
-A **candlestick API Solana** answers: "What did the price do over time?" The **Solana OHLC API** from Vybe returns clean **OHLC candlestick data** from vetted markets only—no junk or wash-traded pools. You get flexible resolution (1m to 1y), volume and trade count per candle, and optional gap handling. Use it for charting, backtesting, alerts, and any **Solana OHLC** or **candlestick**-based analytics. This demo uses two endpoints: token **OHLC** candles (the main **candlestick data** source) and markets/pools so you can see where each token trades (e.g. Raydium, Orca, Pump.fun).
+![Solana Trade History API Historical Trade Data API](screenshots/solana-trade-history-api-historical-trade-data-api.png)
 
-### What You Get
-
-- **OHLC candlestick data** — Open, high, low, close, volume, and trade count per candle; resolutions from 1m to 1y.
-- **Vetted markets only** — No junk or wash-traded pools; data aggregated from USDC, USDT, PYUSD, wSOL markets.
-- **Markets/pools list** — See which DEX (Raydium, Orca, Pump.fun, etc.) and which pool each token trades on.
-- **Web app** — Interactive **candlestick chart** and market browser in the browser.
-
-### How This Helps
-
-Use this demo for **charting**, **backtesting**, **token price** history, or building a **Solana price API** into your app. The **REST API** returns clean **candlestick data** so you can render **price charts** or run analytics without scraping. Get your API key and clone to start.
+<p align="center">
+  <img src="screenshots/solana-historical-trade-data-api-endpoint.png" alt="Solana Historical Trade Data API Endpoint" width="320" style="min-width:320px;max-width:320px;margin-right:10px;" />
+  <img src="screenshots/pumpfun-raydium-historical-data-api-endpoint-provider-on-solana.png" alt="Pump.fun Raydium Historical Data API Endpoint Provider on Solana" width="320" style="min-width:320px;max-width:320px;" />
+</p>
 
 ---
 
-**Get a free Vybe API key** (required to run this demo):
-
 **[Get your free Vybe API key →](https://vybenetwork.com/pricing?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)**  
-**[Vybe API documentation →](https://docs.vybenetwork.com/docs/fetch-ohlc-candles?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)**
+**[Vybe OHLC candles docs →](https://docs.vybenetwork.com/docs/fetch-ohlc-candles?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)**
+
+---
+
+## Prerequisites
+
+- **Node.js** ≥ 20 (LTS recommended)
+- **npm** ≥ 10 (or equivalent)
+
+## Quick Start
+
+Get from clone to running app in a few commands:
+
+```bash
+git clone https://github.com/vybenetwork/solana-ohlc-candlestick-data-api.git
+cd solana-ohlc-candlestick-data-api
+npm install
+cp .env.example .env
+# Edit .env and set VYBE_API_KEY=your_api_key_here
+npm start
+```
+
+Then open **http://localhost:3000**, enter a token mint (or market address when using OHLC from Market), and click **Fetch Candles** or **Fetch Trades for Candles**.
+
+## Environment Variables
+
+| Variable          | Required | Description                                                                 | Example                                   |
+|-------------------|----------|-----------------------------------------------------------------------------|-------------------------------------------|
+| `VYBE_API_KEY`    | Yes      | Vybe API key used for all Vybe requests                                     | `your_api_key_here`                       |
+| `SOLANA_RPC_URL`  | No       | RPC endpoint for Metaplex symbol lookup (token-symbol fallback for quotes) | `https://api.mainnet-beta.solana.com`    |
+| `PORT`            | No       | HTTP server port                                                            | `3000`                                    |
+| `TUNNEL`          | No       | Set to `1` to run behind a Cloudflare Tunnel                               | `1`                                       |
+
+Get your API key at `https://vybenetwork.com/pricing`.
+
+---
+
+## What This Repo Provides
+
+- **OHLC and trades endpoint proxy**
+  - Express server that proxies Vybe:
+    - `GET /v4/tokens/{mintAddress}/candles` (token OHLC from vetted markets)
+    - `GET /v4/markets/{marketAddress}/candles` (OHLC for a single market)
+    - `GET /v4/trades`
+    - `GET /v4/programs/labeled-program-accounts`
+    - `GET /v4/tokens/{mintAddress}`
+    - `GET /v4/tokens/{mintAddress}/top-holders`
+- **OHLC candlestick web UI**
+  - Single-page GUI (no frameworks) built from `src/frontend/app.ts` into `public/app.js`.
+  - Lets you view candlestick charts and trade flows for a token, across three data sources: vetted token OHLC, OHLC rebuilt from trades, or OHLC by market address.
+- **Three candle data sources**
+  - **Vybe API: OHLC Vetted Markets** — token candles aggregated from vetted USDC/USDT/PYUSD/wSOL markets.
+  - **Vybe API: OHLC from Trades** — fetch trades then rebuild OHLC client-side with configurable resolution, Filter Wicks, and per-quote/market exclusions.
+  - **Vybe API: OHLC from Market** — OHLC for a single market address (default e.g. `6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp`).
+- **Local filters (no refetch)**
+  - Search, type filters, authority=fee payer, and substring filters (`market contains`, `program contains`, `signature contains`, `authority contains`, `fee payer contains`).
+  - **Filter Wicks** — trim outlier wicks by lookback and deviation % (only trades beyond recent range).
+  - Per-quote mint and per-market exclusions for rebuild-from-trades mode.
+- **Per-quote / per-market table**
+  - Dynamically generated table of quote mints and markets with included/excluded status, program labels, and trade counts.
+- **CSV export**
+  - Export **current page** of OHLC (chart data) as CSV.
+  - Export **paginated** OHLC (all pages up to configurable max) with columns: time, time_iso, open, high, low, close, volume.
+
+All of this uses Vybe’s production OHLC and trade data across Pump.fun, Raydium, Orca, Meteora, and other Solana DEXes.
+
+---
+
+### Solana API docs for these endpoints
+
+- **Token OHLC candles (`GET /v4/tokens/{mintAddress}/candles`)**:
+  - [https://docs.vybenetwork.com/docs/fetch-ohlc-candles](https://docs.vybenetwork.com/docs/fetch-ohlc-candles?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+- **Market OHLC (`GET /v4/markets/{marketAddress}/candles`)**:
+  - [https://docs.vybenetwork.com/docs/fetch-markets-pools](https://docs.vybenetwork.com/docs/fetch-markets-pools?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+- **Historical Trades (`GET /v4/trades`)**:
+  - [https://docs.vybenetwork.com/reference/get_trade_data_program_v4](https://docs.vybenetwork.com/reference/get_trade_data_program_v4?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+- **Token details (`GET /v4/tokens/{mintAddress}`)**:
+  - [https://docs.vybenetwork.com/reference/get_token_details_v4](https://docs.vybenetwork.com/reference/get_token_details_v4?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+- **Top holders (`GET /v4/tokens/{mintAddress}/top-holders`)**:
+  - [https://docs.vybenetwork.com/reference/get_top_holders_v4](https://docs.vybenetwork.com/reference/get_top_holders_v4?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+- **Labeled programs (`GET /v4/programs/labeled-program-accounts`)**:
+  - [https://docs.vybenetwork.com/reference/get_known_program_accounts_v4](https://docs.vybenetwork.com/reference/get_known_program_accounts_v4?utm_source=github&utm_medium=repo&utm_campaign=solana-ohlc-candlestick-data-api)
+
+---
+
+## Why OHLC / Candlestick Data Matters
+
+OHLC candlestick data is critical for:
+
+- **Charting and UX**: show clean price history with open, high, low, close and volume without scraping or building your own aggregator.
+- **Backtesting and strategy**: use vetted-market OHLC or rebuilt-from-trades OHLC for signals and execution analysis.
+- **Spam and wick filtering**: when rebuilding from trades, use Filter Wicks (lookback + deviation) and per-quote/market exclusions to remove noise and outlier wicks.
+- **Flow and venue analysis**: see which programs and markets dominate flow; switch between token-level OHLC, single-market OHLC, and trade-rebuilt OHLC.
+
+This repo shows how to build a **practical candlestick explorer** on top of Vybe’s token candles, market candles, and trades endpoints.
+
+---
+
+## Frontend Overview (OHLC Candlestick UI)
+
+The OHLC candlestick UI is implemented in `src/frontend/app.ts` and compiled to `public/app.js` via `npm start` (which runs `npm run build:frontend` first).
+
+### Sections
+
+- **Token metadata header**
+  - Shows symbol, name, mint, decimals, price, market cap, 24h volume, and holders where available.
+  - Falls back to Metaplex/`/api/token-symbol/:mint` when token details fail.
+
+![Solana Token Details API Fetch Metadata](screenshots/solana-token-details-api-fetch-metadata.png)
+
+- **Price candlestick chart**
+  - LightweightCharts candlestick chart with overlay (symbol, name, last candle OHLC, volume).
+  - Data source select: Vybe API OHLC Vetted Markets, OHLC from Trades, or OHLC from Market. Resolution (1m–1mo), optional No gaps (eliminate close-to-open gaps). Chart refreshes when quote currency, resolution, or filters change.
+
+- **Trades summary**
+  - Built from the latest fetched trades (no extra Vybe calls):
+    - **Top programs**: counts trades by `programAddress` with labels from well-known map and Vybe `GET /v4/programs/labeled-program-accounts`.
+    - **Top markets**: counts by `marketAddress` with Solscan link, pair, and trade count.
+    - **Top quote mints**: counts by `quoteMintAddress` (using symbol lookup and fallbacks).
+
+![Solana Trades Data Table API Fetch](screenshots/solana-trades-data-table-api-fetch.png)
+
+- **Trades table**
+  - One row per trade from `/api/trades`:
+    - Timestamp (from `blockTime`), price, base size, quote size.
+    - Program, market, base/quote mints, authority, fee payer, signature.
+    - Links to Solscan for account and transaction inspection.
+  - Supports pagination via limit, pageFrom, and pages-to-fetch controls.
+
+![Solana Trade API Fetch Filter Quotes API](screenshots/solana-trade-api-fetch-filter-quotes.png)
+
+- **Rebuild from trades panel**
+  - Visible when candle source is “OHLC from Trades”. Chart quote dropdown, pages to fetch, Authority = fee payer, No gaps, **Filter Wicks** (On/Show Outliers, lookback trades, deviation %), and per-quote/per-market table with include/exclude and program labels.
+
+- **Per-quote / per-market table**
+  - Built from the currently loaded, locally filtered trades when using OHLC from Trades. One row per quote mint or market with Quote/Market, Status (Included/Excluded), program label, counts, and checkbox to exclude. Chart refreshes when quote or filters change.
+
+### Value formatting rules (per-quote table)
+
+- **≥ 100**: show with **0 decimals**.
+- **1–100**: show with **2 decimals**.
+- **< 1**:
+  - Up to 4+ decimals, depending on leading zeros after `0.`.
+  - The UI keeps at most the first two non-zero significant digits after leading zeros.
+- Spinner arrows adjust the value by the smallest meaningful increment for the current magnitude.
+
+---
+
+## Filters & Workflow
+
+### Remote filters (Vybe query params)
+
+![Solana Trade Fetch Filter Local API](screenshots/solana-fetch-trades-api-remote-filters-token.png)
+
+The top of the UI controls the request sent to the API:
+
+- **Candle source**
+  - **Vybe API: OHLC Vetted Markets** — uses token mint; requests `GET /api/tokens/:mint/candles`.
+  - **Vybe API: OHLC from Trades** — uses token mint; requests `GET /api/trades` (with optional `marketAddress` when “OHLC from Market” is not selected), then rebuilds OHLC client-side.
+  - **Vybe API: OHLC from Market** — uses market address input; requests `GET /api/markets/:marketAddress/candles`; trades fetch uses `marketAddress` param.
+- **Token mint / Market address**
+  - Single field: label “Token mint (either side)” for vetted/trades; when source is OHLC from Market, the same slot shows “Market Address” with default `6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp`.
+- **Time range**: `timeStart`, `timeEnd` (Unix seconds).
+- **Resolution**: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 3h, 4h, 1d, 1w, 1mo.
+- **Trades (when OHLC from Trades)**: `limit`, `page`, `pageFrom`, pages to fetch, `sortByAsc`/`sortByDesc`, `marketAddress` (when source is Market).
+
+These map to the proxy routes in `src/server.ts` and are forwarded to Vybe.
+
+### Local filters (no refetch)
+
+![Solana Trade Fetch Filter Local API](screenshots/solana-trade-fetch-filter-local.png)
+
+After trades are loaded (OHLC from Trades mode), local filters apply **in-browser only**:
+
+- **Search**: free-text search across multiple fields.
+- **Type filter**: trade type classification based on program/market context.
+- **Authority = fee payer**: only keep trades where `authorityAddress === feePayerAddress`.
+- **Filter Wicks**: exclude trades that extend beyond the lookback range by more than the deviation % (high wicks above lookback max, low wicks below lookback min). Lookback (trades) and deviation % (e.g. 0.99) configurable.
+- **No gaps**: when rebuilding OHLC, set each candle’s open to the previous candle’s close to eliminate gaps.
+- **Substring filters**: market contains, program contains, signature contains, authority contains, fee payer contains.
+
+Local filters update the trades table, the per-quote/per-market table, and the candlestick chart (chart refreshes when filters or chart quote change).
+
+### Per-quote / per-market exclusions
+
+![Solana Trade API Fetch Filter Quotes API](screenshots/solana-trade-api-fetch-filter-quotes.png)
+
+Exclusions are stored in `excludedQuoteMints` and `excludedMarkets` in `src/frontend/app.ts`:
+
+- **Included/Excluded** checkbox per quote mint or market: when excluded, that quote/market is removed from the trades used to build OHLC and from counts.
+
+When you change **remote filters** or fetch new data, the per-quote/per-market table recomputes from the new filtered trades.
+
+---
+
+## CSV Export
+
+The UI exposes two main export actions:
+
+- **Export current page**
+  - Uses the OHLC data currently shown on the chart and saves a CSV with columns: time, time_iso, open, high, low, close, volume.
+- **Export paginated**
+  - For OHLC from Trades: exports the chart (rebuilt) OHLC as CSV. For vetted or market OHLC: fetches pages from the API up to a configurable max and exports all candles as CSV.
+  - Uses retry/backoff for each request.
+  - Same columns: time, time_iso, open, high, low, close, volume.
+
+---
+
+## Server Proxy Routes
+
+The Express server in `src/server.ts` exposes:
+
+- **`GET /api/tokens/:mint`**
+  - Proxies to Vybe `GET /v4/tokens/{mintAddress}` for token metadata.
+- **`GET /api/tokens/:mint/candles`**
+  - Proxies to Vybe `GET /v4/tokens/{mintAddress}/candles` with query params: resolution, limit, page, timeStart, timeEnd, eliminateCloseToOpenGaps.
+- **`GET /api/markets/:marketAddress/candles`**
+  - Proxies to Vybe `GET /v4/markets/{marketAddress}/candles` with same candle params.
+- **`GET /api/trades`**
+  - Proxies to Vybe `GET /v4/trades` with query params: mintAddress, marketAddress, timeStart, timeEnd, page, limit, sortByAsc, sortByDesc. When marketAddress is provided, base/quote mints are ignored per API docs.
+- **`GET /api/programs/labeled-program-account?programAddress=…`**
+  - Proxies to Vybe `GET /v4/programs/labeled-program-accounts?programAddress=…`. Cached on disk (project root).
+- **`POST /api/programs/labeled-program-accounts`**
+  - Batch variant for multiple program addresses; responses cached on disk.
+- **`GET /api/token-symbol/:mint`**
+  - Resolves symbol via Metaplex and/or Vybe token details; cached on disk (project root).
+- **`POST /api/token-symbols`**
+  - Batch symbol lookup for multiple mints; updates symbol cache.
+- **`GET /api/tokens/:mint/top-holders`**
+  - Proxies to Vybe `GET /v4/tokens/{mintAddress}/top-holders`; holder results cached on disk.
+- **`GET /api/tokens/:mint/holder-labels`**
+  - Uses cached top holders to build wallet labels for addresses seen in trades.
+- **`GET /api/health`**
+  - Health check.
+
+All Vybe requests use a shared client (`src/api/index.ts`) with timeouts and error handling (`toHumanReadableError`). Symbol, program-label, and holder caches are JSON files in the project root.
 
 ---
 
 ## How to Run
 
-1. Clone this repository:
+### 1. Clone the repository
+
 ```bash
-git clone https://github.com/your-org/solana-ohlc-candlestick-data-api.git
+git clone https://github.com/vybenetwork/solana-ohlc-candlestick-data-api.git
 cd solana-ohlc-candlestick-data-api
 ```
 
-2. Install dependencies:
+### 2. Install dependencies
+
 ```bash
 npm install
 ```
 
-3. Set your API key:
+### 3. Set your API key
+
 ```bash
 cp .env.example .env
-# Edit .env and add your VYBE_API_KEY
+# Add your VYBE_API_KEY to .env
 ```
 
-4. Run the demo (CLI):
+### 4. Run the server + web app
+
 ```bash
 npm start
 ```
 
-5. Run the web app (GUI):
+Then open **http://localhost:3000**. The UI shows **OHLC candlestick** data for a token or market: choose candle source (vetted token OHLC, OHLC from trades, or OHLC from market), enter mint or market address, and click **Fetch Candles** or **Fetch Trades for Candles**. Use the chart quote dropdown and filters to refine the chart; export OHLC to CSV as needed.
+
+### 5. (Optional) Run with Cloudflare Tunnel
+
+To expose the app on a public URL (e.g. for sharing or testing from another device), you can enable a tunnel (requires `cloudflared` installed):
+
 ```bash
-npm run dev
+TUNNEL=1 npm start
 ```
-Then open **http://localhost:3000**. The UI shows **OHLC candlestick** charts for a token (select resolution) and a list of markets/pools for a chosen DEX.
 
-## Web App / GUI
+The console will print a **Cloudflare Tunnel URL** if supported.
 
-The included web app is a **Solana OHLC** and **candlestick** viewer: enter a token mint and view **candlestick** charts (OHLC) with configurable resolution (1m–1d); browse markets/pools for a DEX (e.g. Orca Whirlpool, Raydium) to see where the token trades; and toggle between chart and table views of **candlestick data**. All **OHLC** and **candlestick** data is loaded from the Vybe **Solana OHLC API** and rendered in the browser.
+---
 
-## API base and auth
+## Project Structure
 
-- **Base URL:** `https://api.vybenetwork.xyz`
-- **Headers:** `X-API-KEY: <your-api-key>`, `Accept: application/json`
+```text
+solana-ohlc-candlestick-data-api/
+├── .env.example           # Copy to .env, fill in VYBE_API_KEY (and optional SOLANA_RPC_URL, PORT, TUNNEL)
+├── .nvmrc                 # Node version (if present)
+├── tsconfig.json          # TypeScript config for backend
+├── tsconfig.frontend.json # TypeScript config for frontend (builds public/app.js)
+├── package.json           # Scripts and pinned dependencies
+├── README.md
+├── screenshots/           # Screenshots referenced in this README (you update these)
+├── public/                # Web GUI (HTML, CSS, built JS)
+│   ├── index.html
+│   ├── app.js             # Generated by `npm run build:frontend` from src/frontend/app.ts
+│   └── app.css
+├── deploy/                # Deploy script and systemd service
+│   ├── deploy.sh
+│   └── solana-ohlc-candlestick-data-api.service
+└── src/
+    ├── server.ts          # Express server; proxies Vybe API and serves public/
+    ├── config.ts          # Env loading, API base URL, timeouts, PUBLIC_DIR
+    ├── cache.ts           # On-disk caches (symbol, program-label, holder) in project root
+    ├── types/
+    │   └── api.ts         # Interfaces matching Vybe API response shapes
+    ├── api/
+    │   ├── index.ts       # createClient(apiKey) — wires all API methods
+    │   ├── client.ts      # Axios wrapper, retries, human-readable errors
+    │   ├── tokens.ts      # GET /v4/tokens/{mintAddress}
+    │   ├── top-holders.ts # GET /v4/tokens/{mintAddress}/top-holders
+    │   ├── trades.ts      # GET /v4/trades, /v4/programs/labeled-program-accounts
+    │   ├── candles.ts     # GET /v4/tokens/{mintAddress}/candles
+    │   ├── market-candles.ts # GET /v4/markets/{marketAddress}/candles
+    │   └── token-symbol.ts# Token symbol fallback (Metaplex, WSOL/USDC hardcoded)
+    └── frontend/
+        └── app.ts         # OHLC candlestick UI (chart, trades, filters, exports) → builds to public/app.js
+```
 
-## Solana endpoints and parameters
+---
 
-### 1. Token OHLC candles
+## Direct API Usage Example
 
-**`GET /v4/tokens/{mintAddress}/candles`** — OHLC candlestick data for a token (open, high, low, close, volume, count).
+If you want to bypass the UI and fetch OHLC using Vybe directly:
 
-| Type | Name | Required | Description |
-|------|------|----------|-------------|
-| Path | `mintAddress` | Yes | Token mint (SPL, base58) |
-| Query | `resolution` | No | Candle size: `1m`, `5m`, `15m`, `1h`, `4h`, `1d`, `1w`, `1y` (default varies) |
-| Query | `limit` | No | Number of candles to return |
-| Query | `timeStart` | No | Start time (Unix seconds) |
-| Query | `timeEnd` | No | End time (Unix seconds) |
-| Query | `eliminateCloseToOpenGaps` | No | If true, adjust for gaps between candles (boolean) |
-
-### 2. Markets / pools
-
-**`GET /v4/markets`** — List markets/pools for a DEX program.
-
-| Type | Name | Required | Description |
-|------|------|----------|-------------|
-| Query | `programAddress` | **Yes** | DEX program ID, e.g. Raydium V4: `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8`, Orca Whirlpool: `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc`, Pump.fun: `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P` |
-| Query | `limit` | No | Max number of markets (number) |
-| Query | `offset` | No | Pagination offset (number) |
-
-- [Fetch OHLC Candles](https://docs.vybenetwork.com/docs/fetch-ohlc-candles)
-- [Fetch Markets / Pools](https://docs.vybenetwork.com/docs/fetch-markets-pools)
-
-## Code example
-
-```javascript
-const axios = require('axios');
+```typescript
+import axios from 'axios';
+import fs from 'node:fs';
 
 const API = 'https://api.vybenetwork.xyz';
-const headers = { 'X-API-KEY': process.env.VYBE_API_KEY, 'Accept': 'application/json' };
+const headers = { 'X-API-KEY': process.env.VYBE_API_KEY!, Accept: 'application/json' };
 
-// 1) Token OHLC candlestick data (aggregated across vetted markets)
-async function getOHLCCandles(mintAddress, resolution = '1h', limit = 24) {
-  const { data } = await axios.get(
+type Candle = {
+  time: number;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume?: string;
+};
+
+async function fetchTokenOHLC(mintAddress: string, resolution = '1h', limit = 100) {
+  const { data } = await axios.get<{ data: Candle[] }>(
     `${API}/v4/tokens/${mintAddress}/candles`,
     { params: { resolution, limit, eliminateCloseToOpenGaps: true }, headers }
   );
-  return data;
+  return data.data || [];
 }
 
-// 2) Markets/pools for a DEX – programAddress is required
-async function getMarkets(programAddress, limit = 20) {
-  const { data } = await axios.get(
-    `${API}/v4/markets`,
-    { params: { programAddress, limit }, headers }
+async function fetchMarketOHLC(marketAddress: string, resolution = '1h', limit = 100) {
+  const { data } = await axios.get<{ data: Candle[] }>(
+    `${API}/v4/markets/${marketAddress}/candles`,
+    { params: { resolution, limit, eliminateCloseToOpenGaps: true }, headers }
   );
-  return data;
+  return data.data || [];
 }
 
-const solMint = 'So11111111111111111111111111111111111111112';
-const raydiumV4 = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
+const tokenMint = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
-Promise.all([
-  getOHLCCandles(solMint, '1h', 24),
-  getMarkets(raydiumV4, 10)
-]).then(([candles, markets]) => {
-  console.log('OHLC candlestick count:', candles.data?.length);
-  console.log('Markets sample:', markets.data?.slice(0, 3).map(m => m.marketAddress));
+fetchTokenOHLC(tokenMint, '1h', 24).then((candles) => {
+  const header = ['time', 'time_iso', 'open', 'high', 'low', 'close', 'volume'];
+  const rows = candles.map((c) => {
+    const timeIso = new Date(c.time * 1000).toISOString();
+    return [c.time, timeIso, c.open, c.high, c.low, c.close, c.volume ?? ''].join(',');
+  });
+  const csv = [header.join(','), ...rows].join('\n');
+  fs.writeFileSync('ohlc.csv', csv);
+  console.log('OHLC export: %s candles', candles.length);
 });
 ```
 
-## Example Output
+Example CSV output:
 
-```json
-{
-  "data": [
-    {
-      "time": 1769454000,
-      "open": "124.818453303640276994",
-      "high": "125.889046941678518274",
-      "low": "122.860020140986908674",
-      "close": "124.341895651644702722",
-      "volume": "12975664.100103864949191661",
-      "volumeUsd": "1613418671.545907039739280571076830566546401242",
-      "count": 45071
-    }
-  ]
-}
+```csv
+time,time_iso,open,high,low,close,volume
+1769454000,2026-01-01T12:00:00.000Z,0.00001234,0.00001245,0.00001220,0.00001240,1234567.89
 ```
 
-## Need Help?
+---
 
-Reach out to Vybe support:
-- **Telegram**: [Vybe Telegram community](https://t.me/vybenetwork)
-- **Support ticket**: [Submit a ticket on the Vybe website](https://vybenetwork.com)
+## Troubleshooting
+
+| Issue                         | What to do |
+|-------------------------------|-----------|
+| **403 Forbidden**             | Verify `VYBE_API_KEY` in `.env` is correct and has access to the OHLC and trades endpoints. If the key works locally but not on a server, it may be IP-restricted — contact Vybe to allow your server IP. |
+| **Slow responses / timeouts** | The app uses a 60s timeout for Vybe requests and retries. If the API is under load, you may see timeouts; check Vybe status or retry later. |
+| **Missing env vars**          | Ensure you copied `.env.example` to `.env` and set `VYBE_API_KEY`. Start the app and look for `VYBE_API_KEY loaded` in the server logs. |
+
+---
+
+## Support
+
+- **Telegram:** [Vybe community](https://t.me/vybenetwork)
+- **Support ticket:** [Submit a ticket via vybenetwork.xyz](https://vybenetwork.com)
