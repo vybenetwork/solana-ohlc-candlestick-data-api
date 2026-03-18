@@ -180,7 +180,7 @@
             <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
               <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
               <span class="trades-fetch-switch-track">
-                <span class="trades-fetch-switch-option" data-value="off">Off</span>
+                <span class="trades-fetch-switch-option" data-value="off">Show Gaps</span>
                 <span class="trades-fetch-switch-option" data-value="on">On</span>
               </span>
             </label>
@@ -291,7 +291,13 @@
                   </span>
                 </div>
                 <div class="field-control">
-                  <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." aria-label="Pages to fetch" style="width:100%;max-width:5rem;" />
+                  <select id="candlesPages" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." aria-label="Pages to fetch">
+                    <option value="1">1 (1,000)</option>
+                    <option value="5">5 (5,000)</option>
+                    <option value="10" selected>10 (10,000)</option>
+                    <option value="15">15 (15,000)</option>
+                    <option value="20">20 (20,000)</option>
+                  </select>
                 </div>
               </div>
               <div class="field field-switch">
@@ -323,20 +329,32 @@
                   <input type="checkbox" id="filterWicks" class="trades-fetch-switch-input" checked aria-hidden="true" />
                   <span class="trades-fetch-switch-track">
                     <span class="trades-fetch-switch-option" data-value="off">Show Outliers</span>
-                    <span class="trades-fetch-switch-option" data-value="on">Less Outliers</span>
+                    <span class="trades-fetch-switch-option" data-value="on">On</span>
                   </span>
                 </label>
+              </div>
+              <div class="field field-lookback">
+                <div class="field-switch-header">
+                  <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                  <span class="field-switch-title">Lookback</span>
+                  <span class="field-switch-info icon-info-wrap" title="Number of prior trades per market used for median when cleaning highs/lows." aria-label="More info">
+                    <span class="label-icon field-icon icon-info" aria-hidden="true" title="Lookback trades for median."></span>
+                  </span>
+                </div>
+                <div class="field-control">
+                  <input type="number" id="wickLookback" min="1" max="500" value="10" aria-label="Lookback trades" />
+                </div>
               </div>
               <div class="field field-wick-deviation">
                 <div class="field-switch-header">
                   <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
-                  <span class="field-switch-title">Wick deviation %</span>
+                  <span class="field-switch-title">Deviation</span>
                   <span class="field-switch-info icon-info-wrap" title="Exclude trades whose price is more than this % above/below the lookback median (0 = no deviation filter)." aria-label="More info">
                     <span class="label-icon field-icon icon-info" aria-hidden="true" title="Exclude trades whose price is more than this % above/below the lookback median."></span>
                   </span>
                 </div>
                 <div class="field-control field-control-input-suffix">
-                  <input type="number" id="wickDeviationPct" min="0" max="100" step="0.01" value="0.99" placeholder="0.99" style="width:100%;max-width:4rem;" aria-label="Wick deviation percent" />
+                  <input type="number" id="wickDeviationPct" min="0" max="100" step="0.01" value="0.99" placeholder="0.99" style="width:100%;max-width:4rem;" aria-label="Deviation percent" />
                   <span class="input-suffix" aria-hidden="true">%</span>
                 </div>
               </div>

@@ -101,6 +101,7 @@ const localFeePayerInput = document.getElementById('localFeePayer') as HTMLInput
 const localAuthorityInput = document.getElementById('localAuthority') as HTMLInputElement;
 const authorityEqualsFeePayerCheckbox = document.getElementById('authorityEqualsFeePayer') as HTMLInputElement;
 const filterWicksCheckbox = document.getElementById('filterWicks') as HTMLInputElement | null;
+const wickLookbackInput = document.getElementById('wickLookback') as HTMLInputElement | null;
 const wickDeviationPctInput = document.getElementById('wickDeviationPct') as HTMLInputElement | null;
 const perQuoteFiltersContainer = document.getElementById('perQuoteFiltersContainer') as HTMLElement;
 
@@ -138,7 +139,7 @@ const candlesResolutionSelect = document.getElementById('candlesResolution') as 
 const candlesSourceSelect = document.getElementById('candlesSourceSelect') as HTMLSelectElement | null;
 const candlesMarketAddressInput = document.getElementById('candlesMarketAddress') as HTMLInputElement | null;
 const candlesMarketAddressWrap = document.getElementById('candlesMarketAddressWrap') as HTMLElement | null;
-const candlesPagesInput = document.getElementById('candlesPages') as HTMLInputElement | null;
+const candlesPagesInput = document.getElementById('candlesPages') as HTMLSelectElement | null;
 const candlesPagesWrap = document.getElementById('candlesPagesWrap') as HTMLElement | null;
 const candlesPagesProgress = document.getElementById('candlesPagesProgress') as HTMLElement | null;
 const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElement | null;
@@ -1148,7 +1149,8 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
           const hasScore = entry.highVsMedianPct !== 0 || entry.lowVsMedianPct !== 0;
           if ((inTop10High || inTop10Low || extremeHigh || extremeLow) && hasScore) filterMarketSet.add(entry.marketAddress);
         }
-        const WICK_LOOKBACK_TRADES = 50;
+        const rawLookback = Number(wickLookbackInput?.value ?? 10);
+        const WICK_LOOKBACK_TRADES = Number.isFinite(rawLookback) ? Math.max(1, Math.min(500, Math.trunc(rawLookback))) : 10;
         const rawPct = Number(wickDeviationPctInput?.value ?? 0);
         const WICK_DEVIATION_PCT = Number.isFinite(rawPct) ? rawPct : 0;
         const excludedSignatures = new Set<string>();
@@ -2333,8 +2335,10 @@ async function onFetch(): Promise<void> {
     if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
       buildChartQuotesRadios();
     }
-    // Skip final refresh if we already fetched candles at start (full/market) or in the loop (trades).
-    if (!fetchedCandlesAtStart && candlesSourceSelect?.value !== 'trades' && candlesResolutionSelect && candlesChartEl) {
+    // Refresh chart: for trades mode use final wick-filtered data; for full/market only if we didn't fetch candles in the loop.
+    if (candlesSourceSelect?.value === 'trades' && candlesResolutionSelect && candlesChartEl) {
+      void refreshCandles();
+    } else if (!fetchedCandlesAtStart && candlesResolutionSelect && candlesChartEl) {
       void refreshCandles();
     }
   } catch (err) {
@@ -2444,6 +2448,10 @@ if (localFeePayerInput) localFeePayerInput.addEventListener('input', onLocalFilt
 if (localAuthorityInput) localAuthorityInput.addEventListener('input', onLocalFilterChange);
 if (authorityEqualsFeePayerCheckbox) authorityEqualsFeePayerCheckbox.addEventListener('change', onLocalFilterChange);
 if (filterWicksCheckbox) filterWicksCheckbox.addEventListener('change', onLocalFilterChange);
+if (wickLookbackInput) {
+  wickLookbackInput.addEventListener('change', onLocalFilterChange);
+  wickLookbackInput.addEventListener('input', onLocalFilterChange);
+}
 if (wickDeviationPctInput) {
   wickDeviationPctInput.addEventListener('change', onLocalFilterChange);
   wickDeviationPctInput.addEventListener('input', onLocalFilterChange);
