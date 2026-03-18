@@ -10,10 +10,21 @@ import { fileURLToPath } from 'url';
 import type { VybeProgramsResponse, VybeTopHolder } from './types/api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const SYMBOL_CACHE_PATH = path.join(DATA_DIR, 'symbol-cache.json');
-const PROGRAM_CACHE_PATH = path.join(DATA_DIR, 'program-label-cache.json');
-const HOLDER_CACHE_PATH = path.join(DATA_DIR, 'holder-cache.json');
+/** Cache files at project root (same pattern as solana-token-stats-metadata-api / historical-trade). */
+const ROOT_DIR = path.resolve(__dirname, '..');
+const SYMBOL_CACHE_PATH = path.join(ROOT_DIR, 'symbol-cache.json');
+const PROGRAM_CACHE_PATH = path.join(ROOT_DIR, 'program-label-cache.json');
+const HOLDER_CACHE_PATH = path.join(ROOT_DIR, 'holder-cache.json');
+
+let cachePathsLogged = false;
+function logCachePathsOnce(): void {
+  if (cachePathsLogged) return;
+  cachePathsLogged = true;
+  console.log('Cache files (project root):');
+  console.log('  symbol:', SYMBOL_CACHE_PATH);
+  console.log('  program:', PROGRAM_CACHE_PATH);
+  console.log('  holder:', HOLDER_CACHE_PATH);
+}
 
 /** TTL for holder cache: 3 hours (aligns with Vybe "updated every 3 hours"). */
 export const HOLDER_CACHE_TTL_MS = 3 * 60 * 60 * 1000;
@@ -24,12 +35,6 @@ export interface HolderCacheEntry {
 }
 
 export type HolderCache = Record<string, HolderCacheEntry>;
-
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
 
 function readJsonFile<T>(filePath: string, defaultVal: T): T {
   if (!fs.existsSync(filePath)) return defaultVal;
@@ -43,11 +48,11 @@ function readJsonFile<T>(filePath: string, defaultVal: T): T {
 }
 
 function writeJsonFile(filePath: string, data: object): void {
-  ensureDataDir();
   fs.writeFileSync(filePath, JSON.stringify(data, null, 0), 'utf8');
 }
 
 export function readSymbolCacheFromDisk(): Record<string, string> {
+  logCachePathsOnce();
   return readJsonFile<Record<string, string>>(SYMBOL_CACHE_PATH, {});
 }
 
@@ -56,6 +61,7 @@ export function writeSymbolCacheToDisk(data: Record<string, string>): void {
 }
 
 export function readProgramCacheFromDisk(): Record<string, VybeProgramsResponse> {
+  logCachePathsOnce();
   return readJsonFile<Record<string, VybeProgramsResponse>>(PROGRAM_CACHE_PATH, {});
 }
 
@@ -64,6 +70,7 @@ export function writeProgramCacheToDisk(data: Record<string, VybeProgramsRespons
 }
 
 export function readHolderCacheFromDisk(): HolderCache {
+  logCachePathsOnce();
   return readJsonFile<HolderCache>(HOLDER_CACHE_PATH, {});
 }
 

@@ -259,7 +259,10 @@ const WELL_KNOWN_PROGRAMS: Record<string, string> = {
   'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C': 'Raydium CPMM',
   'Gswppe6ERWKpUTXvRPfXdzHhiCyJvLadVvXGfdpBqcE1': 'Guac Swap',
   'PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY': 'Phoenix',
-  'LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo': 'Meteora',
+  'LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo': 'Meteora DLMM',
+  'cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG': 'Meteora DAMM v2',
+  'swapFpHZwjELNnjvThjajtiVmkz3yPQEHjLtka2fwHW': 'Stabble',
+  'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA': 'Pump.fun AMM',
   'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4': 'Jupiter',
 };
 
@@ -2402,6 +2405,9 @@ async function onFetch(): Promise<void> {
           const remoteForDisplay = getRemoteTradesForDisplay();
           lastFilteredTrades = applyLocalFilters(remoteForDisplay);
           lastFilteredTradesForPerQuote = applyLocalFiltersWithoutPerQuoteRules(remoteForDisplay);
+          await ensureQuoteSymbols(lastFilteredTrades, mintAddressInput.value.trim());
+          await ensureSymbolsForTrades(lastFilteredTrades);
+          await ensureProgramLabels(lastFilteredTrades);
           const pageIndex = i + 1;
           const pageProgressStr = `Page ${pageIndex}/${pages.length} · ${allTrades.length.toLocaleString()} records`;
           if (candlesPagesProgress) candlesPagesProgress.textContent = pageProgressStr;

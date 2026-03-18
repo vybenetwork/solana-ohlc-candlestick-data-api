@@ -30,6 +30,9 @@ sshpass -p "$SSH_PASS" rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
   --exclude dist \
   --exclude .env \
   --exclude data \
+  --exclude symbol-cache.json \
+  --exclude program-label-cache.json \
+  --exclude holder-cache.json \
   "$PROJECT_DIR/" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 
 echo "Done. On the VM run: cd $REMOTE_DIR && npm ci && npm run build && npm run build:frontend && sudo systemctl restart solana-ohlc-candlestick-data-api"
