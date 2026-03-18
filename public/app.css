@@ -617,11 +617,9 @@ button:disabled {
   color: #a1a1aa;
   white-space: nowrap;
 }
-.candles-pages-input-wrap input,
-#candlesPages {
-  width: 50px !important;
-  min-width: 50px !important;
-  max-width: 50px !important;
+.candles-pages-input-wrap input {
+  width: 50px;
+  min-width: 50px;
   padding: 0.25rem 0.35rem;
   font-size: 0.8rem;
   border: 1px solid #3f3f46;
@@ -1025,15 +1023,44 @@ tr:hover td {
 .local-filters-pages-chart-row {
   align-items: flex-start;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 .local-filters-pages-chart-row .candles-pages-wrap,
 .local-filters-pages-chart-row .candles-chart-quotes-wrap {
   flex: 0 0 auto;
 }
+.local-filters-pages-chart-row .field-pages {
+  flex: 0 0 auto;
+}
+.local-filters-pages-chart-row .field-chart-quote {
+  flex: 0 0 auto;
+}
+.local-filters-panel .local-filters-pages-chart-row .field .field-switch-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+.local-filters-panel .local-filters-pages-chart-row .field .field-control input,
+.local-filters-panel .local-filters-pages-chart-row .field .field-control select {
+  padding: 0.4rem 0.75rem;
+  min-height: 2.25rem;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  background: #18181b;
+  color: #fafafa;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+.local-filters-panel .local-filters-pages-chart-row .field .field-control select {
+  min-width: 130px;
+  max-width: 130px;
+  cursor: pointer;
+}
 
 .local-filters-global-row .field:not(.field-switch) {
-  flex: 0 0 340px;
-  min-width: 340px;
+  min-width: 136px;
 }
 
 .local-filters-global-row .field-search {
@@ -1088,6 +1115,22 @@ tr:hover td {
   left: 10px;
   width: 16px;
   height: 16px;
+}
+
+/* Input with suffix (e.g. % inside wick deviation field) */
+.field-control-input-suffix {
+  position: relative;
+}
+.field-control-input-suffix .input-suffix {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #71717a;
+}
+.field-control-input-suffix input {
+  padding-right: 1.5rem;
 }
 
 /* Label icons (in labels next to field text, and in switch headers) */
@@ -1348,7 +1391,7 @@ tr:hover td {
 
 .local-filters-dynamic {
   width: 100%;
-  max-height: 500px;
+  max-height: 250px;
   overflow: auto;
 }
 

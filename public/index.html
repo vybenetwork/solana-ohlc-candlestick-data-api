@@ -268,24 +268,32 @@
           <h2>Rebuild from trades</h2>
         </div>
         <div class="local-filters">
-          <div class="local-filters-global-row local-filters-pages-chart-row">
-            <div class="candles-pages-wrap" id="candlesPagesWrap">
-              <div class="candles-pages-header">
-                <span class="field-switch-title">Pages</span>
-              </div>
-              <div class="candles-pages-input-wrap">
-                <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." />
-              </div>
-            </div>
-            <div class="candles-chart-quotes-wrap" id="chartQuotesWrap" title="Which quote mint to use for the chart (one at a time).">
-              <div class="candles-chart-quotes-header">
-                <span class="field-switch-title">Chart quote</span>
-              </div>
-              <div class="candles-chart-quotes-slots" id="chartQuotesCheckboxes"></div>
-            </div>
-          </div>
           <div class="local-filters-global">
-            <div class="local-filters-global-row local-filters-row-type-checkbox" id="localFiltersCheckboxRow">
+            <div class="local-filters-global-row local-filters-pages-chart-row local-filters-row-type-checkbox" id="localFiltersCheckboxRow">
+              <div class="field field-chart-quote" id="chartQuotesWrap" title="Which quote mint to use for the chart.">
+                <div class="field-switch-header">
+                  <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                  <span class="field-switch-title">Chart quote</span>
+                  <span class="field-switch-info icon-info-wrap" title="Quote mint used for the candlestick chart when rebuilding from trades." aria-label="More info">
+                    <span class="label-icon field-icon icon-info" aria-hidden="true" title="Quote mint for the chart."></span>
+                  </span>
+                </div>
+                <div class="field-control">
+                  <select id="chartQuoteSelect" aria-label="Chart quote" style="width:100%;"></select>
+                </div>
+              </div>
+              <div class="field field-pages" id="candlesPagesWrap">
+                <div class="field-switch-header">
+                  <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                  <span class="field-switch-title">Pages to fetch</span>
+                  <span class="field-switch-info icon-info-wrap" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." aria-label="More info">
+                    <span class="label-icon field-icon icon-info" aria-hidden="true" title="When rebuilding from trades, fetch this many pages."></span>
+                  </span>
+                </div>
+                <div class="field-control">
+                  <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." aria-label="Pages to fetch" style="width:100%;max-width:5rem;" />
+                </div>
+              </div>
               <div id="localNoGapsTarget" style="flex: 0 0 auto;"></div>
               <div class="field field-switch">
                 <div class="field-switch-header">
@@ -303,7 +311,7 @@
                   </span>
                 </label>
               </div>
-              <div class="field field-wick-deviation" style="flex: 0 1 33.333%;">
+              <div class="field field-wick-deviation">
                 <div class="field-switch-header">
                   <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
                   <span class="field-switch-title">Wick deviation %</span>
@@ -311,9 +319,9 @@
                     <span class="label-icon field-icon icon-info" aria-hidden="true" title="Exclude trades whose price is more than this % above/below the lookback median."></span>
                   </span>
                 </div>
-                <div class="field-control" style="display:flex;align-items:center;gap:0.25rem;">
+                <div class="field-control field-control-input-suffix">
                   <input type="number" id="wickDeviationPct" min="0" max="100" step="0.01" value="0.99" placeholder="0.99" style="width:100%;max-width:4rem;" aria-label="Wick deviation percent" />
-                  <span aria-hidden="true">%</span>
+                  <span class="input-suffix" aria-hidden="true">%</span>
                 </div>
               </div>
               <div class="field field-switch">

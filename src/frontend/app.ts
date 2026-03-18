@@ -142,7 +142,7 @@ const candlesPagesInput = document.getElementById('candlesPages') as HTMLInputEl
 const candlesPagesWrap = document.getElementById('candlesPagesWrap') as HTMLElement | null;
 const candlesPagesProgress = document.getElementById('candlesPagesProgress') as HTMLElement | null;
 const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElement | null;
-const chartQuotesCheckboxesEl = document.getElementById('chartQuotesCheckboxes') as HTMLElement | null;
+const chartQuoteSelect = document.getElementById('chartQuoteSelect') as HTMLSelectElement | null;
 const perQuoteSectionEl = document.getElementById('perQuoteSection');
 const localNoGapsTarget = document.getElementById('localNoGapsTarget');
 const remoteNoGapsTarget = document.getElementById('remoteNoGapsTarget');
@@ -237,14 +237,10 @@ const CHART_QUOTE_OPTIONS: { mint: string; label: string }[] = [
   { mint: 'EVLXHuz4aM57CiqMhPgZpzurwBGvxeZBBAGSVFAfsmN', label: 'USDT1' },
   { mint: '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo', label: 'USD1' },
 ];
-const CHART_QUOTE_RADIO_NAME = 'chartQuoteMint';
-const MAX_CHART_QUOTE_SLOTS = 5;
-/** Five slots: each has a quote mint chosen from dropdown. One slot is selected (radio) and its mint is used for the chart. */
-let chartQuoteSlots: { mint: string }[] = CHART_QUOTE_OPTIONS.slice(0, MAX_CHART_QUOTE_SLOTS).map((o) => ({ mint: o.mint }));
-/** Index of the slot whose quote is shown on the chart (0..4). */
-let selectedChartQuoteSlotIndex = 0;
 function getSelectedChartQuoteMint(): string {
-  return chartQuoteSlots[selectedChartQuoteSlotIndex]?.mint ?? CHART_QUOTE_OPTIONS[0]!.mint;
+  const v = chartQuoteSelect?.value?.trim();
+  if (v) return v;
+  return CHART_QUOTE_OPTIONS[0]!.mint;
 }
 
 /** Well-known DEX program IDs → label (used when labeled-program-account has no match). Matches token-stats repo. */
@@ -976,9 +972,18 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
   }
 
   perQuoteFiltersContainer.innerHTML = '';
-  if (topQuotesForTable.length > 0) {
-    const table = document.createElement('table');
-    table.innerHTML = `<thead><tr><th>Quote</th><th style="text-align:center">Select All</th><th>Score</th><th>High</th><th>Low</th><th>Min price</th><th>Max price</th></tr></thead><tbody></tbody>`;
+  const table = document.createElement('table');
+  table.innerHTML = `<thead><tr><th>Quote</th><th style="text-align:center">Select All</th><th>Score</th><th>High</th><th>Low</th><th>Min price</th><th>Max price</th></tr></thead><tbody></tbody>`;
+  if (topQuotesForTable.length === 0) {
+    const tbody = table.querySelector('tbody')!;
+    const placeholderRow = document.createElement('tr');
+    placeholderRow.className = 'per-quote-placeholder-row';
+    placeholderRow.innerHTML = '<td colspan="7" style="text-align:center;color:#71717a;padding:0.5rem;">—</td>';
+    tbody.appendChild(placeholderRow);
+    perQuoteFiltersContainer.appendChild(table);
+    return;
+  }
+  {
     const thead = table.querySelector('thead')!;
     const headerActionRow = document.createElement('tr');
     headerActionRow.className = 'per-quote-exclude-all-row';
@@ -2296,7 +2301,7 @@ async function onFetch(): Promise<void> {
           exportBtn.disabled = lastFilteredTrades.length === 0;
           exportAllBtn.disabled = remoteForDisplay.length === 0;
           if (useRebuildCandles) {
-            if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuotesCheckboxesEl) {
+            if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
               buildChartQuotesRadios();
             }
             // Build per-quote rows (and apply wick filter when on) after each page so chart and quote table use filtered data per fetch.
@@ -2322,7 +2327,7 @@ async function onFetch(): Promise<void> {
     exportBtn.disabled = lastFilteredTrades.length === 0;
     exportAllBtn.disabled = lastRemoteTrades.length === 0;
     buildLocalFilterRows(fullRemoteForDisplay);
-    if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuotesCheckboxesEl) {
+    if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
       buildChartQuotesRadios();
     }
     // Skip final refresh if we already fetched candles at start (full/market) or in the loop (trades).
@@ -2364,7 +2369,7 @@ function onLocalFilterChange(): void {
   if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
     void refreshCandles(lastFilteredTrades);
   }
-  if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuotesCheckboxesEl) {
+  if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuoteSelect) {
     buildChartQuotesRadios();
   }
 }
@@ -2517,66 +2522,22 @@ function getChartQuoteOptionsWithCounts(): { mint: string; label: string; count:
 }
 
 function buildChartQuotesRadios(): void {
-  if (!chartQuotesCheckboxesEl) return;
+  if (!chartQuoteSelect) return;
   let quoteOptions = getChartQuoteOptionsWithCounts();
   if (quoteOptions.length === 0) {
     quoteOptions = CHART_QUOTE_OPTIONS.map((o) => ({ mint: o.mint, label: o.label, count: 0 }));
   }
-  const optionByMint = new Map(quoteOptions.map((o) => [o.mint, o]));
-  const allMints = quoteOptions.map((o) => o.mint);
-  for (let i = 0; i < MAX_CHART_QUOTE_SLOTS; i++) {
-    const slotData = chartQuoteSlots[i];
-    if (slotData?.mint && !optionByMint.has(slotData.mint)) {
-      let lbl = quoteSymOrTrunc(slotData.mint);
-      if (!lbl || lbl === '—') lbl = truncate(slotData.mint, 4, 4);
-      optionByMint.set(slotData.mint, { mint: slotData.mint, label: lbl, count: 0 });
-      allMints.push(slotData.mint);
-    }
+  const currentValue = chartQuoteSelect.value || getSelectedChartQuoteMint();
+  chartQuoteSelect.innerHTML = '';
+  for (const o of quoteOptions) {
+    const opt = document.createElement('option');
+    opt.value = o.mint;
+    opt.textContent = `${o.label} (${o.count})`;
+    if (o.mint === currentValue) opt.selected = true;
+    chartQuoteSelect.appendChild(opt);
   }
-  chartQuotesCheckboxesEl.innerHTML = '';
-  for (let i = 0; i < MAX_CHART_QUOTE_SLOTS; i++) {
-    const slotData = chartQuoteSlots[i];
-    if (!slotData) continue;
-    const currentMint = slotData.mint;
-    const row = document.createElement('div');
-    row.className = 'candles-chart-quote-slot';
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = CHART_QUOTE_RADIO_NAME;
-    radio.value = String(i);
-    radio.checked = i === selectedChartQuoteSlotIndex;
-    radio.setAttribute('aria-label', `Show chart for quote slot ${i + 1}`);
-    const select = document.createElement('select');
-    select.setAttribute('aria-label', `Quote ${i + 1}`);
-    for (const mint of allMints) {
-      const o = optionByMint.get(mint)!;
-      const opt = document.createElement('option');
-      opt.value = mint;
-      opt.textContent = `${o.label} (${o.count})`;
-      if (mint === currentMint) opt.selected = true;
-      select.appendChild(opt);
-    }
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        selectedChartQuoteSlotIndex = i;
-        onLocalFilterChange();
-        if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
-          void refreshCandles(lastFilteredTrades);
-        }
-      }
-    });
-    select.addEventListener('change', () => {
-      slotData.mint = select.value;
-      if (i === selectedChartQuoteSlotIndex) {
-        onLocalFilterChange();
-        if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
-          void refreshCandles(lastFilteredTrades);
-        }
-      }
-    });
-    row.appendChild(radio);
-    row.appendChild(select);
-    chartQuotesCheckboxesEl.appendChild(row);
+  if (chartQuoteSelect.value !== currentValue && quoteOptions.length > 0) {
+    chartQuoteSelect.value = quoteOptions[0]!.mint;
   }
 }
 
@@ -2620,6 +2581,14 @@ if (candlesMarketAddressWrap) {
   candlesMarketAddressWrap.hidden = candlesSourceSelect?.value !== 'market';
 }
 buildChartQuotesRadios();
+if (chartQuoteSelect) {
+  chartQuoteSelect.addEventListener('change', () => {
+    onLocalFilterChange();
+    if (candlesSourceSelect?.value === 'trades' && candlesChartEl && candlesResolutionSelect) {
+      void refreshCandles(lastFilteredTrades);
+    }
+  });
+}
 
 // Initial empty state
 renderTrades([], { remoteCount: 0, filteredCount: 0, query: '' });
