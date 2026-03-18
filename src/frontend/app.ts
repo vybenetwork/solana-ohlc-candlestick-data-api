@@ -95,8 +95,8 @@ const tradesLoading = document.getElementById('tradesLoading') as HTMLElement;
 const tradesLoadingText = document.getElementById('tradesLoadingText') as HTMLElement | null;
 
 
-const localProgramInput = document.getElementById('localProgram') as HTMLInputElement;
-const localSignatureInput = document.getElementById('localSignature') as HTMLInputElement;
+const localProgramInput = document.getElementById('localProgram') as HTMLInputElement | null;
+const localSignatureInput = document.getElementById('localSignature') as HTMLInputElement | null;
 const localFeePayerInput = document.getElementById('localFeePayer') as HTMLInputElement;
 const localAuthorityInput = document.getElementById('localAuthority') as HTMLInputElement;
 const authorityEqualsFeePayerCheckbox = document.getElementById('authorityEqualsFeePayer') as HTMLInputElement;
@@ -143,7 +143,7 @@ const candlesPagesWrap = document.getElementById('candlesPagesWrap') as HTMLElem
 const candlesPagesProgress = document.getElementById('candlesPagesProgress') as HTMLElement | null;
 const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElement | null;
 const chartQuotesCheckboxesEl = document.getElementById('chartQuotesCheckboxes') as HTMLElement | null;
-const localFiltersDetailsEl = document.getElementById('localFiltersDetails') as HTMLDetailsElement | null;
+const perQuoteSectionEl = document.getElementById('perQuoteSection');
 const localNoGapsTarget = document.getElementById('localNoGapsTarget');
 const remoteNoGapsTarget = document.getElementById('remoteNoGapsTarget');
 const noGapsSwitchWrap = document.getElementById('noGapsSwitchWrap');
@@ -643,7 +643,7 @@ function buildTradesQueryForTable(pageOverride?: number): string {
 }
 
 function applyLocalFiltersCore(trades: VybeTrade[], includePerQuoteRules: boolean, includeExclusions: boolean): VybeTrade[] {
-  const localProgram = localProgramInput.value.trim().toLowerCase();
+  const localProgram = (localProgramInput?.value ?? '').trim().toLowerCase();
   const localSignature = (localSignatureInput?.value ?? '').trim().toLowerCase();
   const localFeePayer = (localFeePayerInput?.value ?? '').trim().toLowerCase();
   const localAuthority = (localAuthorityInput?.value ?? '').trim().toLowerCase();
@@ -2430,7 +2430,7 @@ exportAllBtn.addEventListener('click', async () => {
   }
 });
 
-localProgramInput.addEventListener('input', onLocalFilterChange);
+if (localProgramInput) localProgramInput.addEventListener('input', onLocalFilterChange);
 if (localSignatureInput) localSignatureInput.addEventListener('input', onLocalFilterChange);
 if (localFeePayerInput) localFeePayerInput.addEventListener('input', onLocalFilterChange);
 if (localAuthorityInput) localAuthorityInput.addEventListener('input', onLocalFilterChange);
@@ -2491,9 +2491,9 @@ function updateCandlesPagesVisibility(): void {
   const showMarketAddress = source === 'market';
   if (candlesPagesWrap) candlesPagesWrap.hidden = !showTradesParams;
   if (chartQuotesWrap) chartQuotesWrap.hidden = !showTradesParams;
-  if (localFiltersDetailsEl) {
-    localFiltersDetailsEl.hidden = !showTradesParams;
-    if (showTradesParams) localFiltersDetailsEl.open = true;
+  if (perQuoteSectionEl) {
+    perQuoteSectionEl.hidden = !showTradesParams;
+    perQuoteSectionEl.setAttribute('aria-hidden', String(showTradesParams ? 'false' : 'true'));
   }
   if (candlesMarketAddressWrap) candlesMarketAddressWrap.hidden = !showMarketAddress;
 }
@@ -2604,10 +2604,10 @@ if (candlesPagesWrap) {
 if (chartQuotesWrap) {
   chartQuotesWrap.hidden = candlesSourceSelect?.value !== 'trades';
 }
-if (localFiltersDetailsEl) {
+if (perQuoteSectionEl) {
   const showParams = candlesSourceSelect?.value === 'trades';
-  localFiltersDetailsEl.hidden = !showParams;
-  if (showParams) localFiltersDetailsEl.open = true;
+  perQuoteSectionEl.hidden = !showParams;
+  perQuoteSectionEl.setAttribute('aria-hidden', showParams ? 'false' : 'true');
 }
 function moveNoGapsSwitchToRebuildSection(): void {
   if (!noGapsSwitchWrap || !localNoGapsTarget || !remoteNoGapsTarget) return;
