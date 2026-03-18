@@ -1016,29 +1016,6 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
     return;
   }
   {
-    const thead = table.querySelector('thead')!;
-    const headerActionRow = document.createElement('tr');
-    headerActionRow.className = 'per-quote-exclude-all-row';
-    const headerActionCell = document.createElement('th');
-    headerActionCell.colSpan = 7;
-    headerActionCell.className = 'per-quote-exclude-all-cell';
-    const excludeAllBtn = document.createElement('button');
-    excludeAllBtn.type = 'button';
-    excludeAllBtn.className = 'per-quote-exclude-all-btn';
-    excludeAllBtn.textContent = 'Exclude all';
-    excludeAllBtn.title = 'Exclude every quote and every market (check all exclude boxes)';
-    excludeAllBtn.addEventListener('click', () => {
-      for (const [quoteMint] of topQuotesForTable) excludedQuoteMints.add(quoteMint);
-      for (const [quoteMint] of topQuotesForTable) {
-        const list = quoteToMarketsList.get(quoteMint);
-        if (list) for (const { marketAddress } of list) excludedMarkets.add(marketAddress);
-      }
-      buildLocalFilterRows();
-      onLocalFilterChange();
-    });
-    headerActionCell.appendChild(excludeAllBtn);
-    headerActionRow.appendChild(headerActionCell);
-    thead.insertBefore(headerActionRow, thead.firstChild);
     const tbody = table.querySelector('tbody')!;
     const TOP_VISIBLE = 100000; /* show all quote rows and market sub-rows */
     for (let i = 0; i < topQuotesForTable.length; i++) {

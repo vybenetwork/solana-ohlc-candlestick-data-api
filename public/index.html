@@ -40,13 +40,14 @@
               </span>
             </div>
             <div class="candles-source-row">
-              <label for="candlesSourceSelect" class="candles-source-label">
+              <div class="field-control">
+                <span class="field-icon icon-market" aria-hidden="true"></span>
                 <select id="candlesSourceSelect" class="candles-source-select" aria-label="Candles source">
                   <option value="full">Vybe OHLC API (Full)</option>
                   <option value="trades">Rebuild from trades</option>
                   <option value="market">Vybe OHLC by Market API</option>
                 </select>
-              </label>
+              </div>
               <div class="candles-market-address-wrap" id="candlesMarketAddressWrap" hidden>
                 <label for="candlesMarketAddress" class="candles-market-address-label">Market address</label>
                 <input type="text" id="candlesMarketAddress" class="candles-market-address-input" placeholder="Market / pool address" title="Vybe market address for GET /v4/markets/{marketAddress}/candles" />

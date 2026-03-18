@@ -578,9 +578,19 @@ button:disabled {
   display: inline-flex;
   align-items: center;
 }
+.candles-source-row .field-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.candles-source-row .field-control .field-icon {
+  position: absolute;
+  left: 10px;
+}
 .candles-source-select {
   min-width: 12rem;
   padding: 0.35rem 0.75rem;
+  padding-left: 34px;
   font-size: 0.8rem;
   color: #e4e4e7;
   background: #27272a;
@@ -1463,6 +1473,11 @@ tr:hover td {
 }
 .local-filters-dynamic thead th {
   text-align: center;
+  position: sticky;
+  top: 0;
+  background: #18181b;
+  z-index: 1;
+  box-shadow: 0 1px 0 0 #27272a;
 }
 
 .local-filters-dynamic th:first-child,
@@ -1779,18 +1794,6 @@ tr:hover td {
   color: #52525b;
 }
 
-/* Exclude all: top-right header row */
-.local-filters-dynamic .per-quote-exclude-all-row th {
-  padding: 0.35rem 0.5rem;
-  vertical-align: middle;
-  text-align: right;
-  border-bottom: 1px solid #27272a;
-}
-
-.local-filters-dynamic .per-quote-exclude-all-cell {
-  text-align: right;
-}
-
 .local-filters-dynamic .per-quote-show-all-row td {
   padding: 0.4rem 0.35rem;
   vertical-align: middle;
@@ -1800,8 +1803,7 @@ tr:hover td {
   gap: 0.5rem;
 }
 
-.local-filters-dynamic .per-quote-show-all-btn,
-.local-filters-dynamic .per-quote-exclude-all-btn {
+.local-filters-dynamic .per-quote-show-all-btn {
   font-size: 0.8rem;
   color: #a1a1aa;
   background: transparent;
@@ -1811,8 +1813,7 @@ tr:hover td {
   cursor: pointer;
 }
 
-.local-filters-dynamic .per-quote-show-all-btn:hover,
-.local-filters-dynamic .per-quote-exclude-all-btn:hover {
+.local-filters-dynamic .per-quote-show-all-btn:hover {
   color: #e4e4e7;
   background: #27272a;
   border-color: #52525b;
