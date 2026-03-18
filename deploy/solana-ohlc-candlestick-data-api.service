@@ -1,0 +1,18 @@
+[Unit]
+Description=Solana OHLC Candlestick Data API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/solana-ohlc-candlestick-data-api
+ExecStart=/usr/bin/env node dist/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=NODE_ENV=production
+Environment=PORT=3002
+
+[Install]
+WantedBy=multi-user.target

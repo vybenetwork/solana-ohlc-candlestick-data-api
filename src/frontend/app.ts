@@ -18,6 +18,7 @@ declare const LightweightCharts: {
       subscribeVisibleLogicalRangeChange: (callback: (range: { from: number; to: number } | null) => void) => void;
       setVisibleLogicalRange: (range: { from: number; to: number } | null) => void;
       getVisibleLogicalRange: () => { from: number; to: number } | null;
+      fitContent: () => void;
     };
     resize: (width: number, height: number) => void;
   };
@@ -99,7 +100,11 @@ const localSignatureInput = document.getElementById('localSignature') as HTMLInp
 const localFeePayerInput = document.getElementById('localFeePayer') as HTMLInputElement;
 const localAuthorityInput = document.getElementById('localAuthority') as HTMLInputElement;
 const authorityEqualsFeePayerCheckbox = document.getElementById('authorityEqualsFeePayer') as HTMLInputElement;
+const filterWicksCheckbox = document.getElementById('filterWicks') as HTMLInputElement | null;
+const wickDeviationPctInput = document.getElementById('wickDeviationPct') as HTMLInputElement | null;
 const perQuoteFiltersContainer = document.getElementById('perQuoteFiltersContainer') as HTMLElement;
+
+let wickFilteredTradesByQuote = new Map<string, VybeTrade[]>();
 
 const tradesError = document.getElementById('tradesError') as HTMLElement;
 const tradesMeta = document.getElementById('tradesMeta') as HTMLElement;
@@ -139,6 +144,9 @@ const candlesPagesProgress = document.getElementById('candlesPagesProgress') as 
 const chartQuotesWrap = document.getElementById('chartQuotesWrap') as HTMLElement | null;
 const chartQuotesCheckboxesEl = document.getElementById('chartQuotesCheckboxes') as HTMLElement | null;
 const localFiltersDetailsEl = document.getElementById('localFiltersDetails') as HTMLDetailsElement | null;
+const localNoGapsTarget = document.getElementById('localNoGapsTarget');
+const remoteNoGapsTarget = document.getElementById('remoteNoGapsTarget');
+const noGapsSwitchWrap = document.getElementById('noGapsSwitchWrap');
 const candlesChartEl = document.getElementById('candlesChart') as HTMLElement | null;
 
 /** Vybe explorer: wallet links only (vybe.fyi supports wallets, not markets/programs/mints). */
@@ -179,6 +187,7 @@ let candlesChart:
         subscribeVisibleLogicalRangeChange: (callback: (range: { from: number; to: number } | null) => void) => void;
         setVisibleLogicalRange: (range: { from: number; to: number } | null) => void;
         getVisibleLogicalRange: () => { from: number; to: number } | null;
+        fitContent: () => void;
       };
     }
   | null = null;
@@ -969,12 +978,12 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
   perQuoteFiltersContainer.innerHTML = '';
   if (topQuotesForTable.length > 0) {
     const table = document.createElement('table');
-    table.innerHTML = `<thead><tr><th>Quote</th><th style="text-align:center">Select All</th><th>Wick score</th><th>Min price</th><th>Max price</th></tr></thead><tbody></tbody>`;
+    table.innerHTML = `<thead><tr><th>Quote</th><th style="text-align:center">Select All</th><th>Score</th><th>High</th><th>Low</th><th>Min price</th><th>Max price</th></tr></thead><tbody></tbody>`;
     const thead = table.querySelector('thead')!;
     const headerActionRow = document.createElement('tr');
     headerActionRow.className = 'per-quote-exclude-all-row';
     const headerActionCell = document.createElement('th');
-    headerActionCell.colSpan = 5;
+    headerActionCell.colSpan = 7;
     headerActionCell.className = 'per-quote-exclude-all-cell';
     const excludeAllBtn = document.createElement('button');
     excludeAllBtn.type = 'button';
@@ -994,7 +1003,7 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
     headerActionRow.appendChild(headerActionCell);
     thead.insertBefore(headerActionRow, thead.firstChild);
     const tbody = table.querySelector('tbody')!;
-    const TOP_VISIBLE = 3;
+    const TOP_VISIBLE = 20;
     for (let i = 0; i < topQuotesForTable.length; i++) {
       const [quoteMint, count] = topQuotesForTable[i];
       const b = quoteBounds[quoteMint];
@@ -1012,6 +1021,8 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
         <td title="${quoteMint}"><div>${quoteSym}</div><div class="meta">(${isExcluded ? 0 : filteredForMint}/${totalForMint})</div></td>
         <td style="text-align:center"><label class="per-quote-status"><input type="checkbox" class="per-quote-exclude" ${!isExcluded ? 'checked' : ''} aria-label="Include ${quoteSym}" /><span class="per-quote-status-text">${isExcluded ? 'Excluded' : 'Included'}</span></label></td>
         <td class="per-quote-main-wick-cell"></td>
+        <td class="per-quote-main-price-cell"></td>
+        <td class="per-quote-main-price-cell"></td>
         <td class="per-quote-main-price-cell">${escapeHtml(minPStr)}</td>
         <td class="per-quote-main-price-cell">${escapeHtml(maxPStr)}</td>
       `;
@@ -1052,25 +1063,200 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
 
       const marketsList = quoteToMarketsList.get(quoteMint) ?? [];
       const resolution = candlesResolutionSelect?.value ?? '1m';
-      const tradesForQuote = lastFilteredTrades.filter((t) => otherMint(t, baseMint) === quoteMint);
-      const rawWickByMarket = new Map<string, number>();
-      for (const { marketAddress: ma } of marketsList) {
-        const candles = buildCandlesFromTradesForMarket(tradesForQuote, resolution, baseMint, quoteMint, ma);
-        rawWickByMarket.set(ma, getWickScoreFromCandles(candles));
-      }
-      const normalizedWickByMarket = normalizeWickScores(rawWickByMarket);
-
+      const candlesByMarket = new Map<string, Candle[]>();
+      const marketRows: Array<{
+        marketAddress: string;
+        totalCount: number;
+        filteredCount: number;
+        programAddress?: string;
+        highVal: number;
+        lowVal: number;
+        highVsMedianPct: number;
+        lowVsMedianPct: number;
+      }> = [];
       for (const { marketAddress, totalCount, filteredCount, programAddress } of marketsList) {
+        const candles = buildCandlesFromTradesForMarket(
+          lastFilteredTrades.filter((t) => otherMint(t, baseMint) === quoteMint),
+          resolution,
+          baseMint,
+          quoteMint,
+          marketAddress
+        );
+        candlesByMarket.set(marketAddress, candles);
+        const highVal = candles.length > 0 ? Math.max(...candles.map((c) => c.high)) : -Infinity;
+        const lowVal = candles.length > 0 ? Math.min(...candles.map((c) => c.low)) : Infinity;
+        const h = Number.isFinite(highVal) ? highVal : -Infinity;
+        const l = Number.isFinite(lowVal) ? lowVal : Infinity;
+        marketRows.push({
+          marketAddress,
+          totalCount,
+          filteredCount,
+          programAddress,
+          highVal: h,
+          lowVal: l,
+          highVsMedianPct: 0,
+          lowVsMedianPct: 0,
+        });
+      }
+
+      const allHighs = marketRows.map((r) => r.highVal).filter((v) => Number.isFinite(v) && v !== -Infinity);
+      const allLows = marketRows.map((r) => r.lowVal).filter((v) => Number.isFinite(v) && v !== Infinity);
+      const top50Highs = [...allHighs].sort((a, b) => b - a).slice(0, 50);
+      const bottom50Lows = [...allLows].sort((a, b) => a - b).slice(0, 50);
+      const medianHigh = top50Highs.length > 0 ? median(top50Highs) : 0;
+      const medianLow = bottom50Lows.length > 0 ? median(bottom50Lows) : 0;
+
+      for (const row of marketRows) {
+        if (medianHigh > 0 && row.highVal !== -Infinity) {
+          row.highVsMedianPct = ((row.highVal - medianHigh) / medianHigh) * 100;
+        }
+        if (medianLow > 0 && row.lowVal !== Infinity) {
+          row.lowVsMedianPct = ((row.lowVal - medianLow) / medianLow) * 100;
+        }
+      }
+
+      const combinedByMarket = marketRows;
+      combinedByMarket.sort((a, b) => b.totalCount - a.totalCount);
+
+      const byHighVsMedianDesc = [...combinedByMarket].sort((a, b) => b.highVsMedianPct - a.highVsMedianPct);
+      const byLowVsMedianAsc = [...combinedByMarket].sort((a, b) => a.lowVsMedianPct - b.lowVsMedianPct);
+      const rowHighRank = new Map<string, number>();
+      const rowLowRank = new Map<string, number>();
+      byHighVsMedianDesc.forEach((e, i) => {
+        if (i < 10) rowHighRank.set(e.marketAddress, i + 1);
+      });
+      byLowVsMedianAsc.forEach((e, i) => {
+        if (i < 10) rowLowRank.set(e.marketAddress, i + 1);
+      });
+
+      const tradesForQuote = lastFilteredTrades.filter((t) => otherMint(t, baseMint) === quoteMint);
+      let tradesForQuoteToUse = tradesForQuote;
+
+      if (filterWicksCheckbox?.checked) {
+        const filterMarketSet = new Set<string>();
+        for (const entry of combinedByMarket) {
+          const inTop10High = rowHighRank.has(entry.marketAddress);
+          const inTop10Low = rowLowRank.has(entry.marketAddress);
+          const extremeHigh = Number.isFinite(entry.highVsMedianPct) && entry.highVsMedianPct > 100;
+          const extremeLow = Number.isFinite(entry.lowVsMedianPct) && entry.lowVsMedianPct < -100;
+          const hasScore = entry.highVsMedianPct !== 0 || entry.lowVsMedianPct !== 0;
+          if ((inTop10High || inTop10Low || extremeHigh || extremeLow) && hasScore) filterMarketSet.add(entry.marketAddress);
+        }
+        const WICK_LOOKBACK_TRADES = 50;
+        const rawPct = Number(wickDeviationPctInput?.value ?? 0);
+        const WICK_DEVIATION_PCT = Number.isFinite(rawPct) ? rawPct : 0;
+        const excludedSignatures = new Set<string>();
+        const getPrice = (t: VybeTrade) => {
+          const base = (t.baseMintAddress ?? '').trim();
+          const raw = Number(t.price);
+          if (!Number.isFinite(raw) || raw <= 0) return NaN;
+          return base === baseMint ? raw : 1 / raw;
+        };
+        const deviationFactor = WICK_DEVIATION_PCT <= 0 ? 0 : Math.max(0.01, Math.min(100, WICK_DEVIATION_PCT)) / 100;
+        for (const marketAddress of filterMarketSet) {
+          const marketTrades = [...tradesForQuote.filter((t) => (t.marketAddress ?? '').trim() === marketAddress)].sort(
+            (a, b) => (a.blockTime ?? 0) - (b.blockTime ?? 0)
+          );
+          if (marketTrades.length === 0) continue;
+          const entry = combinedByMarket.find((e) => e.marketAddress === marketAddress);
+          if (!entry) continue;
+          const inTop10High = rowHighRank.has(marketAddress);
+          const inTop10Low = rowLowRank.has(marketAddress);
+          const extremeHigh = Number.isFinite(entry.highVsMedianPct) && entry.highVsMedianPct > 100;
+          const extremeLow = Number.isFinite(entry.lowVsMedianPct) && entry.lowVsMedianPct < -100;
+          const excludeHighWick = inTop10High || extremeHigh;
+          const excludeLowWick = inTop10Low || extremeLow;
+          for (let i = 0; i < marketTrades.length; i++) {
+            const t = marketTrades[i]!;
+            const p = getPrice(t);
+            if (!Number.isFinite(p) || !t.signature) continue;
+            const lookbackStart = Math.max(0, i - WICK_LOOKBACK_TRADES);
+            const lookbackTrades = marketTrades.slice(lookbackStart, i);
+            if (lookbackTrades.length === 0) continue;
+            const lookbackPrices = lookbackTrades.map((x) => getPrice(x)).filter(Number.isFinite);
+            if (lookbackPrices.length === 0) continue;
+            const med = median([...lookbackPrices].sort((a, b) => a - b));
+            if (!Number.isFinite(med) || med <= 0) continue;
+            if (deviationFactor > 0) {
+              if (excludeHighWick && p >= med * (1 + deviationFactor)) excludedSignatures.add(t.signature);
+              else if (excludeLowWick && p <= med * (1 - deviationFactor)) excludedSignatures.add(t.signature);
+            }
+          }
+        }
+        tradesForQuoteToUse = tradesForQuote.filter((t) => !t.signature || !excludedSignatures.has(t.signature));
+
+        const filteredCandlesByMarket = new Map<string, Candle[]>();
+        const filteredMarketRows: Array<{
+          marketAddress: string;
+          totalCount: number;
+          filteredCount: number;
+          programAddress?: string;
+          highVal: number;
+          lowVal: number;
+          highVsMedianPct: number;
+          lowVsMedianPct: number;
+        }> = [];
+        for (const { marketAddress, totalCount, programAddress } of marketsList) {
+          const marketTradesAfterWickFilter = tradesForQuoteToUse.filter((t) => (t.marketAddress ?? '').trim() === marketAddress);
+          const filteredCount = marketTradesAfterWickFilter.length;
+          const candles = buildCandlesFromTradesForMarket(tradesForQuoteToUse, resolution, baseMint, quoteMint, marketAddress);
+          filteredCandlesByMarket.set(marketAddress, candles);
+          const highVal = candles.length > 0 ? Math.max(...candles.map((c) => c.high)) : -Infinity;
+          const lowVal = candles.length > 0 ? Math.min(...candles.map((c) => c.low)) : Infinity;
+          const h = Number.isFinite(highVal) ? highVal : -Infinity;
+          const l = Number.isFinite(lowVal) ? lowVal : Infinity;
+          filteredMarketRows.push({
+            marketAddress,
+            totalCount,
+            filteredCount,
+            programAddress,
+            highVal: h,
+            lowVal: l,
+            highVsMedianPct: 0,
+            lowVsMedianPct: 0,
+          });
+        }
+        const filtHighs = filteredMarketRows.map((r) => r.highVal).filter((v) => Number.isFinite(v) && v !== -Infinity);
+        const filtLows = filteredMarketRows.map((r) => r.lowVal).filter((v) => Number.isFinite(v) && v !== Infinity);
+        const filtMedHigh = filtHighs.length > 0 ? median([...filtHighs].sort((a, b) => b - a).slice(0, 50)) : 0;
+        const filtMedLow = filtLows.length > 0 ? median([...filtLows].sort((a, b) => a - b).slice(0, 50)) : 0;
+        for (const row of filteredMarketRows) {
+          if (filtMedHigh > 0 && row.highVal !== -Infinity) row.highVsMedianPct = ((row.highVal - filtMedHigh) / filtMedHigh) * 100;
+          if (filtMedLow > 0 && row.lowVal !== Infinity) row.lowVsMedianPct = ((row.lowVal - filtMedLow) / filtMedLow) * 100;
+        }
+        filteredMarketRows.sort((a, b) => b.totalCount - a.totalCount);
+        combinedByMarket.length = 0;
+        combinedByMarket.push(...filteredMarketRows);
+        const byHighFilt = [...filteredMarketRows].sort((a, b) => b.highVsMedianPct - a.highVsMedianPct);
+        const byLowFilt = [...filteredMarketRows].sort((a, b) => a.lowVsMedianPct - b.lowVsMedianPct);
+        rowHighRank.clear();
+        rowLowRank.clear();
+        byHighFilt.forEach((e, i) => { if (i < 10) rowHighRank.set(e.marketAddress, i + 1); });
+        byLowFilt.forEach((e, i) => { if (i < 10) rowLowRank.set(e.marketAddress, i + 1); });
+        wickFilteredTradesByQuote.set(quoteMint, tradesForQuoteToUse);
+      } else {
+        wickFilteredTradesByQuote.set(quoteMint, tradesForQuote);
+      }
+
+      combinedByMarket.forEach((entry, idx) => {
+        const { marketAddress, totalCount, filteredCount, programAddress, highVal, lowVal, highVsMedianPct, lowVsMedianPct } = entry;
         const mb = marketBounds.get(quoteMint)?.get(marketAddress);
         const subMinPVal = mb?.minPrice;
         const subMaxPVal = mb?.maxPrice;
         const subMinP = subMinPVal != null && Number.isFinite(subMinPVal) ? fmt(subMinPVal) + ' ' + quoteSym : '—';
         const subMaxP = subMaxPVal != null && Number.isFinite(subMaxPVal) ? fmt(subMaxPVal) + ' ' + quoteSym : '—';
-        const wickScore = normalizedWickByMarket.get(marketAddress);
-        const wickClass = wickScore != null ? getWickClass(wickScore) : '';
+        const subHigh = highVal !== -Infinity && Number.isFinite(highVal) ? fmt(highVal) + ' ' + quoteSym : '—';
+        const subLow = lowVal !== Infinity && Number.isFinite(lowVal) ? fmt(lowVal) + ' ' + quoteSym : '—';
+
+        const rHigh = rowHighRank.get(marketAddress);
+        const rLow = rowLowRank.get(marketAddress);
+        let rowClass = '';
+        if (rHigh != null) rowClass = `row-high-${rHigh}`;
+        else if (rLow != null) rowClass = `row-low-${rLow}`;
+
         const subTr = document.createElement('tr');
-        subTr.className = 'per-quote-market-row';
-        if (i >= TOP_VISIBLE) {
+        subTr.className = 'per-quote-market-row' + (rowClass ? ' ' + rowClass : '');
+        if (idx >= TOP_VISIBLE) {
           subTr.classList.add('per-quote-row-collapsible');
           if (!perQuoteExpanded) subTr.classList.add('per-quote-row-hidden');
         }
@@ -1079,7 +1265,14 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
         const poolTitle = programAddress
           ? (programLabelCache[programAddress] ?? truncate(programAddress, 4, 4))
           : truncate(marketAddress, 4, 4);
-        const wickScoreStr = wickScore != null ? Math.round(wickScore) + '%' : '—';
+        const highR = Number.isFinite(highVsMedianPct) ? Math.round(highVsMedianPct) : null;
+        const lowR = Number.isFinite(lowVsMedianPct) ? Math.round(lowVsMedianPct) : null;
+        const highPart = highR !== null && highR !== 0 ? `${highR > 0 ? '+' : ''}${highR}%` : '';
+        const lowPart = lowR !== null && lowR !== 0 ? `${lowR > 0 ? '+' : ''}${lowR}%` : '';
+        const scoreStr =
+          highPart && lowPart
+            ? `${highPart} / ${lowPart}`
+            : highPart || lowPart || '—';
         subTr.innerHTML = `
           <td class="per-quote-market-cell" title="${marketAddress}">
             <label class="per-quote-market-check-wrap">
@@ -1090,7 +1283,9 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
             <span class="meta">(${isMarketExcluded ? 0 : filteredCount}/${totalCount})</span>
           </td>
           <td class="per-quote-market-status-cell" style="text-align:center"></td>
-          <td class="per-quote-wick-cell per-quote-score-cell${wickClass ? ' ' + wickClass : ''}">${escapeHtml(wickScoreStr)}</td>
+          <td class="per-quote-wick-cell per-quote-score-cell">${escapeHtml(scoreStr)}</td>
+          <td class="per-quote-market-details">${escapeHtml(subHigh)}</td>
+          <td class="per-quote-market-details">${escapeHtml(subLow)}</td>
           <td class="per-quote-market-details">${escapeHtml(subMinP)}</td>
           <td class="per-quote-market-details">${escapeHtml(subMaxP)}</td>
         `;
@@ -1110,13 +1305,13 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
           });
         }
         tbody.appendChild(subTr);
-      }
+      });
     }
     if (topQuotesForTable.length > TOP_VISIBLE) {
       const buttonRow = document.createElement('tr');
       buttonRow.className = 'per-quote-show-all-row';
       const td = document.createElement('td');
-      td.colSpan = 5;
+      td.colSpan = 7;
       td.style.textAlign = 'center';
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1430,47 +1625,11 @@ function buildCandlesFromTradesForMarket(
     .sort((a, b) => a.time - b.time);
 }
 
-/** Raw wick score: sum(upper wicks) - sum(lower wicks). Positive = more upper wicks. */
-function getWickScoreFromCandles(candles: Candle[]): number {
-  let sumUpper = 0;
-  let sumLower = 0;
-  for (const c of candles) {
-    const bodyTop = Math.max(c.open, c.close);
-    const bodyBottom = Math.min(c.open, c.close);
-    sumUpper += Math.max(0, c.high - bodyTop);
-    sumLower += Math.max(0, bodyBottom - c.low);
-  }
-  return sumUpper - sumLower;
-}
-
-/** Normalize raw wick scores to -100..100. Returns map of marketAddress -> normalized score. */
-function normalizeWickScores(
-  rawByMarket: Map<string, number>
-): Map<string, number> {
-  const out = new Map<string, number>();
-  const values = [...rawByMarket.values()].filter((v) => Number.isFinite(v));
-  if (values.length === 0) return out;
-  const minRaw = Math.min(...values);
-  const maxRaw = Math.max(...values);
-  const span = maxRaw - minRaw;
-  for (const [market, raw] of rawByMarket) {
-    if (!Number.isFinite(raw)) continue;
-    const normalized = span > 0 ? (200 * (raw - minRaw)) / span - 100 : 0;
-    out.set(market, normalized);
-  }
-  return out;
-}
-
-/** Wick score -> CSS class. [-10,10] no class; 10-40 light, 40-70 mid, 70-100 dark green; -10 to -40 light, -40 to -70 mid, -70 to -100 dark red. */
-function getWickClass(score: number): string {
-  if (score >= -10 && score <= 10) return '';
-  if (score > 10 && score <= 40) return 'wick-light-green';
-  if (score > 40 && score <= 70) return 'wick-mid-green';
-  if (score > 70 && score <= 100) return 'wick-dark-green';
-  if (score >= -40 && score < -10) return 'wick-light-red';
-  if (score >= -70 && score < -40) return 'wick-mid-red';
-  if (score >= -100 && score < -70) return 'wick-dark-red';
-  return '';
+function median(sortedArr: number[]): number {
+  if (sortedArr.length === 0) return 0;
+  const mid = Math.floor(sortedArr.length / 2);
+  if (sortedArr.length % 2 === 1) return sortedArr[mid]!;
+  return ((sortedArr[mid - 1] ?? 0) + (sortedArr[mid] ?? 0)) / 2;
 }
 
 function ensureCandlesChart(): void {
@@ -1588,13 +1747,17 @@ function renderCandles(candles: Candle[]): void {
   );
   if (candlesChart && candlesBarCount > 0) {
     const timeScale = candlesChart.timeScale();
-    const currentRange = timeScale.getVisibleLogicalRange();
-    const lastIndex = candlesBarCount - 1;
-    const GAP_BARS = 20;
-    const defaultWidth = currentRange ? currentRange.to - currentRange.from : Math.min(candlesBarCount, 100);
-    const to = lastIndex + GAP_BARS;
-    const from = Math.max(0, to - defaultWidth);
-    timeScale.setVisibleLogicalRange({ from, to });
+    if (candlesSourceSelect?.value === 'trades') {
+      timeScale.fitContent();
+    } else {
+      const currentRange = timeScale.getVisibleLogicalRange();
+      const lastIndex = candlesBarCount - 1;
+      const GAP_BARS = 20;
+      const defaultWidth = currentRange ? currentRange.to - currentRange.from : Math.min(candlesBarCount, 100);
+      const to = lastIndex + GAP_BARS;
+      const from = Math.max(0, to - defaultWidth);
+      timeScale.setVisibleLogicalRange({ from, to });
+    }
   }
 
   updateCandlesChartOverlay(
@@ -1668,8 +1831,18 @@ async function refreshCandles(tradesSnapshot?: VybeTrade[]): Promise<void> {
   try {
     let candles: Candle[];
     if (useTrades) {
-      const source = tradesSnapshot ?? lastFilteredTrades;
-      candles = buildCandlesFromTrades(source, resolution, mint);
+      let tradesToUse: VybeTrade[];
+      if (filterWicksCheckbox?.checked) {
+        const chartQuote = getSelectedChartQuoteMint();
+        const filtered = chartQuote ? wickFilteredTradesByQuote.get(chartQuote) : undefined;
+        tradesToUse = filtered ?? (tradesSnapshot ?? lastFilteredTrades);
+      } else {
+        tradesToUse = tradesSnapshot ?? lastFilteredTrades;
+      }
+      candles = buildCandlesFromTrades(tradesToUse, resolution, mint);
+      if (eliminateCloseToOpenGapsCheckbox?.checked && candles.length > 0) {
+        for (let i = 1; i < candles.length; i++) candles[i].open = candles[i - 1].close;
+      }
       lastCandlesFromTrades = candles;
       if (candles.length === 0 && candlesError) {
         candlesError.textContent = 'No data for current filters. Include at least one quote (and its markets) to see the chart.';
@@ -2037,6 +2210,7 @@ async function onFetch(): Promise<void> {
   lastRemoteTrades = [];
   lastFilteredTrades = [];
   lastFilteredTradesForPerQuote = [];
+  wickFilteredTradesByQuote.clear();
   excludedQuoteMints.clear();
   excludedMarkets.clear();
   Object.keys(perQuoteRules).forEach((k) => {
@@ -2125,8 +2299,8 @@ async function onFetch(): Promise<void> {
             if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuotesCheckboxesEl) {
               buildChartQuotesRadios();
             }
-            // Do not build per-quote rows here: min/max price and wick score must be based on all pages.
-            // buildLocalFilterRows() is called once after the loop with full data.
+            // Build per-quote rows (and apply wick filter when on) after each page so chart and quote table use filtered data per fetch.
+            buildLocalFilterRows();
             if (candlesResolutionSelect && candlesChartEl) void refreshCandles(lastFilteredTrades);
           }
         }
@@ -2187,6 +2361,9 @@ function onLocalFilterChange(): void {
   });
   exportBtn.disabled = lastFilteredTrades.length === 0;
   buildLocalFilterRows();
+  if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
+    void refreshCandles(lastFilteredTrades);
+  }
   if (chartQuotesWrap && !chartQuotesWrap.hidden && chartQuotesCheckboxesEl) {
     buildChartQuotesRadios();
   }
@@ -2258,6 +2435,16 @@ if (localSignatureInput) localSignatureInput.addEventListener('input', onLocalFi
 if (localFeePayerInput) localFeePayerInput.addEventListener('input', onLocalFilterChange);
 if (localAuthorityInput) localAuthorityInput.addEventListener('input', onLocalFilterChange);
 if (authorityEqualsFeePayerCheckbox) authorityEqualsFeePayerCheckbox.addEventListener('change', onLocalFilterChange);
+if (filterWicksCheckbox) filterWicksCheckbox.addEventListener('change', onLocalFilterChange);
+if (wickDeviationPctInput) {
+  wickDeviationPctInput.addEventListener('change', onLocalFilterChange);
+  wickDeviationPctInput.addEventListener('input', onLocalFilterChange);
+}
+if (eliminateCloseToOpenGapsCheckbox) {
+  eliminateCloseToOpenGapsCheckbox.addEventListener('change', () => {
+    if (candlesSourceSelect?.value === 'trades' && candlesChartEl) void refreshCandles(lastFilteredTrades);
+  });
+}
 
 /** Sync switch track aria-pressed from checkbox state */
 function syncSwitchTrack(switchLabel: HTMLElement): void {
@@ -2393,15 +2580,17 @@ function buildChartQuotesRadios(): void {
   }
 }
 
+// Apply candles source from URL so refresh loads with the selected option
+const urlCandlesSource = new URLSearchParams(window.location.search).get('candlesSource');
+if (candlesSourceSelect && (urlCandlesSource === 'full' || urlCandlesSource === 'trades' || urlCandlesSource === 'market')) {
+  candlesSourceSelect.value = urlCandlesSource;
+}
+
 if (candlesSourceSelect && candlesResolutionSelect) {
   candlesSourceSelect.addEventListener('change', () => {
-    if (candlesSourceSelect.value === 'trades') {
-      candlesResolutionSelect.value = '1m';
-    }
-    updateCandlesPagesVisibility();
-    updateFetchButtonLabel();
-    onLocalFilterChange();
-    void refreshCandles();
+    const url = new URL(window.location.href);
+    url.searchParams.set('candlesSource', candlesSourceSelect.value);
+    window.location.href = url.toString();
   });
 }
 
@@ -2420,6 +2609,13 @@ if (localFiltersDetailsEl) {
   localFiltersDetailsEl.hidden = !showParams;
   if (showParams) localFiltersDetailsEl.open = true;
 }
+function moveNoGapsSwitchToRebuildSection(): void {
+  if (!noGapsSwitchWrap || !localNoGapsTarget || !remoteNoGapsTarget) return;
+  const isTrades = candlesSourceSelect?.value === 'trades';
+  const target = isTrades ? localNoGapsTarget : remoteNoGapsTarget;
+  if (noGapsSwitchWrap.parentElement !== target) target.appendChild(noGapsSwitchWrap);
+}
+moveNoGapsSwitchToRebuildSection();
 if (candlesMarketAddressWrap) {
   candlesMarketAddressWrap.hidden = candlesSourceSelect?.value !== 'market';
 }

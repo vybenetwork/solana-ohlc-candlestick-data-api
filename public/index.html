@@ -17,6 +17,7 @@
       <section class="inputs panel">
         <div class="section-header">
           <h2>Remote filters</h2>
+          <span class="candles-pages-progress section-header-status" id="candlesPagesProgress" aria-live="polite"></span>
         </div>
         <p class="meta remote-filters-help">
           <strong>Remote filters</strong> fetch trades from the Vybe API and change the dataset.
@@ -50,22 +51,7 @@
                 <label for="candlesMarketAddress" class="candles-market-address-label">Market address</label>
                 <input type="text" id="candlesMarketAddress" class="candles-market-address-input" placeholder="Market / pool address" title="Vybe market address for GET /v4/markets/{marketAddress}/candles" />
               </div>
-              <div class="candles-pages-wrap" id="candlesPagesWrap">
-                <div class="candles-pages-header">
-                  <span class="field-switch-title">Pages</span>
-                </div>
-                <div class="candles-pages-input-wrap">
-                  <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." />
-                </div>
-              </div>
-              <div class="candles-chart-quotes-wrap" id="chartQuotesWrap" title="Which quote mint to use for the chart (one at a time).">
-                <div class="candles-chart-quotes-header">
-                  <span class="field-switch-title">Chart quote</span>
-                </div>
-                <div class="candles-chart-quotes-slots" id="chartQuotesCheckboxes"></div>
-              </div>
             </div>
-            <div class="candles-pages-progress" id="candlesPagesProgress" aria-live="polite"></div>
           </div>
         </div>
 
@@ -182,21 +168,23 @@
           </div>
         </div>
 
-        <div class="field field-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
-          <div class="field-switch-header">
-            <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
-            <span class="field-switch-title">No gaps</span>
-            <span class="field-switch-info icon-info-wrap" title="Eliminate gaps between candles by using previous close as next open. Default is true." aria-label="More info">
-              <span class="label-icon field-icon icon-info" aria-hidden="true" title="Eliminate gaps between candles by using previous close as next open. Default is true."></span>
-            </span>
+        <div id="remoteNoGapsTarget">
+          <div id="noGapsSwitchWrap" class="field field-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+            <div class="field-switch-header">
+              <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+              <span class="field-switch-title">No gaps</span>
+              <span class="field-switch-info icon-info-wrap" title="Eliminate gaps between candles by using previous close as next open. Default is true." aria-label="More info">
+                <span class="label-icon field-icon icon-info" aria-hidden="true" title="Eliminate gaps between candles by using previous close as next open. Default is true."></span>
+              </span>
+            </div>
+            <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
+              <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
+              <span class="trades-fetch-switch-track">
+                <span class="trades-fetch-switch-option" data-value="off">Off</span>
+                <span class="trades-fetch-switch-option" data-value="on">On</span>
+              </span>
+            </label>
           </div>
-          <label class="trades-fetch-switch" title="Eliminate gaps between candles by using previous close as next open. Default is true.">
-            <input type="checkbox" id="eliminateCloseToOpenGaps" class="trades-fetch-switch-input" checked aria-hidden="true" />
-            <span class="trades-fetch-switch-track">
-              <span class="trades-fetch-switch-option" data-value="off">Off</span>
-              <span class="trades-fetch-switch-option" data-value="on">On</span>
-            </span>
-          </label>
         </div>
 
         <div class="field">
@@ -223,6 +211,22 @@
         <details class="advanced local-filters-panel" id="localFiltersDetails" hidden>
           <summary>Rebuild from trades parameters</summary>
           <div class="local-filters">
+            <div class="local-filters-global-row local-filters-pages-chart-row">
+              <div class="candles-pages-wrap" id="candlesPagesWrap">
+                <div class="candles-pages-header">
+                  <span class="field-switch-title">Pages</span>
+                </div>
+                <div class="candles-pages-input-wrap">
+                  <input type="number" id="candlesPages" min="1" max="20" value="10" title="When rebuilding from trades, fetch this many pages (1 at a time); chart updates after each page." />
+                </div>
+              </div>
+              <div class="candles-chart-quotes-wrap" id="chartQuotesWrap" title="Which quote mint to use for the chart (one at a time).">
+                <div class="candles-chart-quotes-header">
+                  <span class="field-switch-title">Chart quote</span>
+                </div>
+                <div class="candles-chart-quotes-slots" id="chartQuotesCheckboxes"></div>
+              </div>
+            </div>
             <div class="local-filters-global">
               <div class="local-filters-global-row">
                 <div class="field">
@@ -246,7 +250,37 @@
                   </div>
                 </div>
               </div>
-              <div class="local-filters-global-row local-filters-row-type-checkbox">
+              <div class="local-filters-global-row local-filters-row-type-checkbox" id="localFiltersCheckboxRow">
+                <div id="localNoGapsTarget" style="flex: 0 0 auto;"></div>
+                <div class="field field-switch">
+                  <div class="field-switch-header">
+                    <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                    <span class="field-switch-title">Filter Wicks</span>
+                    <span class="field-switch-info icon-info-wrap" title="Remove highest-deviating trade(s) from top 5 high/low markets (rebuild from trades)." aria-label="More info">
+                      <span class="label-icon field-icon icon-info" aria-hidden="true" title="Remove highest-deviating trade(s) from top 5 high/low markets (rebuild from trades)."></span>
+                    </span>
+                  </div>
+                  <label class="trades-fetch-switch" title="Remove highest-deviating trade(s) from top 5 high/low markets.">
+                    <input type="checkbox" id="filterWicks" class="trades-fetch-switch-input" checked aria-hidden="true" />
+                    <span class="trades-fetch-switch-track">
+                      <span class="trades-fetch-switch-option" data-value="off">Off</span>
+                      <span class="trades-fetch-switch-option" data-value="on">On</span>
+                    </span>
+                  </label>
+                </div>
+                <div class="field field-wick-deviation" style="flex: 0 1 33.333%;">
+                  <div class="field-switch-header">
+                    <span class="label-icon field-icon icon-grid" aria-hidden="true"></span>
+                    <span class="field-switch-title">Wick deviation %</span>
+                    <span class="field-switch-info icon-info-wrap" title="Exclude trades whose price is more than this % above/below the lookback median (0 = no deviation filter)." aria-label="More info">
+                      <span class="label-icon field-icon icon-info" aria-hidden="true" title="Exclude trades whose price is more than this % above/below the lookback median."></span>
+                    </span>
+                  </div>
+                  <div class="field-control" style="display:flex;align-items:center;gap:0.25rem;">
+                    <input type="number" id="wickDeviationPct" min="0" max="100" step="0.01" value="0.99" placeholder="0.99" style="width:100%;max-width:4rem;" aria-label="Wick deviation percent" />
+                    <span aria-hidden="true">%</span>
+                  </div>
+                </div>
                 <div class="field field-switch">
                   <div class="field-switch-header">
                     <span class="label-icon field-icon icon-user" aria-hidden="true"></span>

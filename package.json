@@ -1,7 +1,7 @@
 {
-  "name": "solana-historical-trade-data-api",
+  "name": "solana-ohlc-candlestick-data-api",
   "version": "1.0.0",
-  "description": "Solana historical trade data API demo — Vybe API",
+  "description": "Solana OHLC candlestick data API — Vybe API",
   "type": "module",
   "main": "dist/server.js",
   "scripts": {

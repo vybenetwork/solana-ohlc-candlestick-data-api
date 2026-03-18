@@ -1,49 +1,66 @@
-# Deploy to VM (e.g. Cloudflare DNS → instance)
+# Deploy to VM (subdomain solana-ohlc-candlestick-data-api)
 
-1. **SSH into your VM.**
+## 1. Upload project (from your Mac)
 
-2. **Clone or pull the repo** (use your branch; adjust path if needed):
-   ```bash
-   git clone https://github.com/vybenetwork/solana-historical-trade-data-api.git
-   cd solana-historical-trade-data-api
-   git checkout feat/ts-base-trades-ui
-   ```
-   If the repo already exists:
-   ```bash
-   cd solana-historical-trade-data-api
-   git fetch origin && git checkout feat/ts-base-trades-ui && git pull origin feat/ts-base-trades-ui
-   ```
+From the project root:
 
-3. **Install Node (if needed).** The project has `.nvmrc`; with nvm:
-   ```bash
-   nvm use
-   npm ci
-   ```
-
-4. **Environment.** Copy the example env and set your API key:
-   ```bash
-   cp .env.example .env
-   # Edit .env and set VYBE_API_KEY=your_key
-   ```
-
-5. **Build backend and frontend:**
-   ```bash
-   npm run build
-   npm run build:frontend
-   ```
-
-6. **Run the server.** Port 3000 by default; set `PORT` in `.env` if you use something else (e.g. 80 behind a reverse proxy):
-   ```bash
-   node dist/server.js
-   ```
-   Or with PM2 for a long-running process:
-   ```bash
-   npx pm2 start dist/server.js --name historical-trades
-   ```
-
-7. **Optional: reverse proxy.** If you use Nginx/Caddy in front of the app, proxy `https://solana-historical-trade-data-api.dehghani.ca` to `http://127.0.0.1:3000`.
-
-**Quick one-off run (after clone + env):**
 ```bash
+chmod +x deploy/deploy.sh
+./deploy/deploy.sh
+```
+
+This rsyncs to `root@65.109.218.200:/root/solana-ohlc-candlestick-data-api/` (excluding `node_modules`, `dist`, `.env`, `data`). Set `SSH_PASS` in the environment to override the script default.
+
+## 2. First-time setup on the VM
+
+SSH in, then:
+
+```bash
+cd /root/solana-ohlc-candlestick-data-api
+nvm use
+npm ci
+cp .env.example .env
+# Edit .env and set VYBE_API_KEY=your_key
+npm run build
+npm run build:frontend
+```
+
+Install and enable the systemd service:
+
+```bash
+sudo cp deploy/solana-ohlc-candlestick-data-api.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable solana-ohlc-candlestick-data-api
+sudo systemctl start solana-ohlc-candlestick-data-api
+```
+
+Check status: `sudo systemctl status solana-ohlc-candlestick-data-api`
+
+## 3. After later deploys (upload + rebuild + restart)
+
+From your Mac:
+
+```bash
+./deploy/deploy.sh
+```
+
+Then on the VM:
+
+```bash
+cd /root/solana-ohlc-candlestick-data-api
+npm ci
+npm run build
+npm run build:frontend
+sudo systemctl restart solana-ohlc-candlestick-data-api
+```
+
+## 4. Reverse proxy
+
+Subdomain for this app is already assigned like the historical-trade-data-api. Point it at `http://127.0.0.1:3000` (or the `PORT` you set in `.env`).
+
+## One-off run (no service)
+
+```bash
+cd /root/solana-ohlc-candlestick-data-api
 npm ci && npm run build && npm run build:frontend && node dist/server.js
 ```

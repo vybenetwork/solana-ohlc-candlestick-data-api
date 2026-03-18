@@ -473,7 +473,6 @@ button:disabled {
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: flex-start;
-  margin-bottom: 0.75rem;
 }
 
 .candles-controls .field {
@@ -641,6 +640,10 @@ button:disabled {
   color: #71717a;
   margin-top: 0.25rem;
   min-height: 1.2em;
+}
+.section-header .section-header-status.candles-pages-progress {
+  margin-top: 0;
+  margin-left: 0.75rem;
 }
 .candles-pages-progress:empty {
   display: none;
@@ -1019,6 +1022,15 @@ tr:hover td {
   min-width: 0;
 }
 
+.local-filters-pages-chart-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.local-filters-pages-chart-row .candles-pages-wrap,
+.local-filters-pages-chart-row .candles-chart-quotes-wrap {
+  flex: 0 0 auto;
+}
+
 .local-filters-global-row .field:not(.field-switch) {
   flex: 0 0 340px;
   min-width: 340px;
@@ -1336,7 +1348,8 @@ tr:hover td {
 
 .local-filters-dynamic {
   width: 100%;
-  overflow-x: auto;
+  max-height: 500px;
+  overflow: auto;
 }
 
 .local-filters-dynamic table {
@@ -1456,8 +1469,7 @@ tr:hover td {
   cursor: pointer;
 }
 
-/* Wick-based row background (3 green, 3 red). */
-/* Wick/body score cell-only coloring (per-quote sub-rows) */
+/* Score cell: high/low vs median %; no cell colour, only row is coloured. */
 .local-filters-dynamic .per-quote-wick-cell {
   width: 120px;
   min-width: 120px;
@@ -1472,12 +1484,28 @@ tr:hover td {
 .local-filters-dynamic .per-quote-market-details:first-of-type {
   padding-left: 1rem;
 }
-.local-filters-dynamic .per-quote-wick-cell.wick-light-green { background: rgba(34, 197, 94, 0.2); }
-.local-filters-dynamic .per-quote-wick-cell.wick-mid-green { background: rgba(34, 197, 94, 0.35); }
-.local-filters-dynamic .per-quote-wick-cell.wick-dark-green { background: rgba(34, 197, 94, 0.5); }
-.local-filters-dynamic .per-quote-wick-cell.wick-light-red { background: rgba(239, 68, 68, 0.2); }
-.local-filters-dynamic .per-quote-wick-cell.wick-mid-red { background: rgba(239, 68, 68, 0.35); }
-.local-filters-dynamic .per-quote-wick-cell.wick-dark-red { background: rgba(239, 68, 68, 0.5); }
+
+/* Row highlight only: top 5 highest price vs median and top 5 lowest vs median -> red shades. */
+.local-filters-dynamic tr.per-quote-market-row.row-high-1 { background: rgba(127, 29, 29, 0.35); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-2 { background: rgba(127, 29, 29, 0.28); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-3 { background: rgba(127, 29, 29, 0.2); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-4 { background: rgba(127, 29, 29, 0.12); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-5 { background: rgba(127, 29, 29, 0.08); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-6 { background: rgba(127, 29, 29, 0.06); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-7 { background: rgba(127, 29, 29, 0.05); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-8 { background: rgba(127, 29, 29, 0.04); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-9 { background: rgba(127, 29, 29, 0.03); }
+.local-filters-dynamic tr.per-quote-market-row.row-high-10 { background: rgba(127, 29, 29, 0.02); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-1 { background: rgba(127, 29, 29, 0.35); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-2 { background: rgba(127, 29, 29, 0.28); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-3 { background: rgba(127, 29, 29, 0.2); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-4 { background: rgba(127, 29, 29, 0.12); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-5 { background: rgba(127, 29, 29, 0.08); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-6 { background: rgba(127, 29, 29, 0.06); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-7 { background: rgba(127, 29, 29, 0.05); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-8 { background: rgba(127, 29, 29, 0.04); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-9 { background: rgba(127, 29, 29, 0.03); }
+.local-filters-dynamic tr.per-quote-market-row.row-low-10 { background: rgba(127, 29, 29, 0.02); }
 
 .markets-by-wick-table {
   width: 100%;
@@ -1496,12 +1524,6 @@ tr:hover td {
   color: #a1a1aa;
   font-weight: 600;
 }
-.markets-by-wick-table tbody tr.wick-light-green { background: rgba(34, 197, 94, 0.12); }
-.markets-by-wick-table tbody tr.wick-mid-green { background: rgba(34, 197, 94, 0.22); }
-.markets-by-wick-table tbody tr.wick-dark-green { background: rgba(34, 197, 94, 0.32); }
-.markets-by-wick-table tbody tr.wick-light-red { background: rgba(239, 68, 68, 0.12); }
-.markets-by-wick-table tbody tr.wick-mid-red { background: rgba(239, 68, 68, 0.22); }
-.markets-by-wick-table tbody tr.wick-dark-red { background: rgba(239, 68, 68, 0.32); }
 
 /* Per-quote inputs: same style as .field input (dark theme, border, padding). */
 .local-filters-dynamic input[type="number"] {
