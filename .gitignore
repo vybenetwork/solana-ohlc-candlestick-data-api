@@ -21,3 +21,7 @@ debug-*.json
 # Persistent caches (read/write at request time, stored in data/)
 data/
 
+# Keep locally only (removed from repo)
+deploy/
+scripts/
+DEPLOY.md
