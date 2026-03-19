@@ -4,11 +4,11 @@ This repository demonstrates how to use the Vybe Solana OHLC candlestick data AP
 
 Use this project as a reference implementation or starter kit for building Solana price charting UIs, backtesting pipelines, and on-chain candlestick data products powered by Vybe’s high-performance Solana OHLC API.
 
-![Solana Trade History API Historical Trade Data API](screenshots/solana-ohlc-candlestick-data-api-repo.png)
+![Solana OHLC Candlestick Data API Repo](screenshots/solana-ohlc-candlestick-data-api-repo.png)
 
 <p align="center">
-  <img src="screenshots/solana-ohlc-data-provider-fetch-candlesticks.png" alt="Solana Historical Trade Data API Endpoint" width="340" style="min-width:340px;max-width:340px;margin-right:10px;" />
-  <img src="screenshots/solana-ohlc-api-endpoint-candlestick-charts.png" alt="Pump.fun Raydium Historical Data API Endpoint Provider on Solana" width="320" style="min-width:320px;max-width:320px;" />
+  <img src="screenshots/solana-ohlc-data-provider-fetch-candlesticks.png" alt="Solana OHLC Data Provider Fetch Candlesticks" width="340" style="min-width:340px;max-width:340px;margin-right:10px;" />
+  <img src="screenshots/solana-ohlc-api-endpoint-candlestick-charts.png" alt="Solana OHLC API Endpoint Candlesticks Charts" width="320" style="min-width:320px;max-width:320px;" />
 </p>
 
 ---
@@ -140,8 +140,6 @@ The OHLC candlestick UI is implemented in `src/frontend/app.ts` and compiled to 
     - Links to Solscan for account and transaction inspection.
   - Supports pagination via limit, pageFrom, and pages-to-fetch controls.
 
-![Solana Trade API Fetch Filter Quotes API](screenshots/solana-trade-api-fetch-filter-quotes.png)
-
 - **Rebuild from trades panel**
   - Visible when candle source is “OHLC from Trades”. Chart quote dropdown, pages to fetch, Authority = fee payer, No gaps, **Filter Wicks** (On/Show Outliers, lookback trades, deviation %), and per-quote/per-market table with include/exclude and program labels.
 
@@ -163,7 +161,7 @@ The OHLC candlestick UI is implemented in `src/frontend/app.ts` and compiled to 
 
 ### Remote filters (Vybe query params)
 
-![Solana Trade Fetch Filter Local API](screenshots/solana-fetch-trades-api-remote-filters-token.png)
+![Solana Trade API Fetch Filter Quotes API](screenshots/solana-trade-api-fetch-filter-quotes.png)
 
 The top of the UI controls the request sent to the API:
 
@@ -181,7 +179,6 @@ These map to the proxy routes in `src/server.ts` and are forwarded to Vybe.
 
 ### Local filters (no refetch)
 
-![Solana Trade Fetch Filter Local API](screenshots/solana-trade-fetch-filter-local.png)
 
 After trades are loaded (OHLC from Trades mode), local filters apply **in-browser only**:
 
@@ -196,7 +193,7 @@ Local filters update the trades table, the per-quote/per-market table, and the c
 
 ### Per-quote / per-market exclusions
 
-![Solana Trade API Fetch Filter Quotes API](screenshots/solana-trade-api-fetch-filter-quotes.png)
+![Solana Market Pool Fetching API Filter Candlesticks](screenshots/solana-market-pool-fetching-api-filter-candlesticks.png)
 
 Exclusions are stored in `excludedQuoteMints` and `excludedMarkets` in `src/frontend/app.ts`:
 

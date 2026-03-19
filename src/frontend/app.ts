@@ -1269,8 +1269,9 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
       // When filter wicks is on, auto-exclude low-count or low-rank markets.
       if (filterWicksCheckbox?.checked && combinedByMarket.length > 0) {
         if (combinedByMarket.length > 10) {
-          // More than 10 pools: include only the top 5 by count, and only if count >= 50.
-          const MIN_COUNT_TOP5 = 50;
+          // More than 10 pools: include only the top 5 by count. Min count = 500 if top market >= 500, else 50.
+          const topMarketCount = combinedByMarket[0]?.totalCount ?? 0;
+          const MIN_COUNT_TOP5 = topMarketCount >= 500 ? 500 : 50;
           const top5 = combinedByMarket.slice(0, 5);
           for (const entry of top5) {
             if (entry.totalCount >= MIN_COUNT_TOP5) excludedMarkets.delete(entry.marketAddress);
