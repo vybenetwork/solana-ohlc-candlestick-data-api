@@ -78,6 +78,9 @@ interface Candle {
   volume?: number;
 }
 
+/** Matches Vybe OHLC docs default `timeStart` (two weeks before end). Used for token + market candle requests. */
+const DEFAULT_OHLC_LOOKBACK_SECONDS = 14 * 24 * 60 * 60;
+
 const mintAddressInput = document.getElementById('mintAddress') as HTMLInputElement;
 const timeStartInput = document.getElementById('timeStart') as HTMLInputElement;
 const timeEndInput = document.getElementById('timeEnd') as HTMLInputElement;
@@ -558,6 +561,21 @@ function parseUnixSecondsFromDatetimeLocal(v: string): number | undefined {
   const ms = Date.parse(raw);
   if (!Number.isFinite(ms)) return undefined;
   return Math.floor(ms / 1000);
+}
+
+/** Local timestamp string for `<input type="datetime-local">`. */
+function formatDatetimeLocalFromDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/** Populate Start/End remote filters: now − 14 days through now. */
+function applyDefaultRemoteTimeRange(): void {
+  if (!timeStartInput || !timeEndInput) return;
+  const now = new Date();
+  const start = new Date(now.getTime() - DEFAULT_OHLC_LOOKBACK_SECONDS * 1000);
+  timeStartInput.value = formatDatetimeLocalFromDate(start);
+  timeEndInput.value = formatDatetimeLocalFromDate(now);
 }
 
 function parseNumberOrUndefined(v: string): number | undefined {
@@ -1491,16 +1509,18 @@ function resolutionToSeconds(resolution: string): number {
 async function fetchCandlesFromApi(mint: string, resolution: string, pageOverride?: number): Promise<Candle[]> {
   const limit = Number(limitSelect?.value) || 1000;
   const page = pageOverride !== undefined ? pageOverride : Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
-  const timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
+  const nowSec = Math.floor(Date.now() / 1000);
+  let timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
   let timeEnd = parseUnixSecondsFromDatetimeLocal(timeEndInput?.value ?? '');
-  if (timeEnd == null || timeEnd < 0) timeEnd = Math.floor(Date.now() / 1000);
+  if (timeEnd == null || timeEnd < 0) timeEnd = nowSec;
+  if (timeStart == null || timeStart < 0) timeStart = nowSec - DEFAULT_OHLC_LOOKBACK_SECONDS;
   const params = new URLSearchParams();
   params.set('resolution', resolution);
   params.set('limit', String(limit));
   params.set('page', String(page));
   const eliminateGaps = eliminateCloseToOpenGapsCheckbox?.checked !== false;
   params.set('eliminateCloseToOpenGaps', String(eliminateGaps));
-  if (timeStart != null && timeStart >= 0) params.set('timeStart', String(timeStart));
+  params.set('timeStart', String(timeStart));
   params.set('timeEnd', String(timeEnd));
   const res = await fetchWithRetry(`/api/tokens/${encodeURIComponent(mint)}/candles?${params.toString()}`);
   const body = (await res.json().catch(() => ({}))) as { data?: Array<{ time: number; open: string; high: string; low: string; close: string; volume?: string }> };
@@ -1529,16 +1549,18 @@ async function fetchCandlesFromApi(mint: string, resolution: string, pageOverrid
 async function fetchCandlesFromMarketApi(marketAddress: string, resolution: string, pageOverride?: number): Promise<Candle[]> {
   const limit = Number(limitSelect?.value) || 1000;
   const page = pageOverride !== undefined ? pageOverride : Math.max(0, Math.trunc(Number(pageFromInput?.value || '0')));
-  const timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
+  const nowSec = Math.floor(Date.now() / 1000);
+  let timeStart = parseUnixSecondsFromDatetimeLocal(timeStartInput?.value ?? '');
   let timeEnd = parseUnixSecondsFromDatetimeLocal(timeEndInput?.value ?? '');
-  if (timeEnd == null || timeEnd < 0) timeEnd = Math.floor(Date.now() / 1000);
+  if (timeEnd == null || timeEnd < 0) timeEnd = nowSec;
+  if (timeStart == null || timeStart < 0) timeStart = nowSec - DEFAULT_OHLC_LOOKBACK_SECONDS;
   const params = new URLSearchParams();
   params.set('resolution', resolution);
   params.set('limit', String(limit));
   params.set('page', String(page));
   const eliminateGaps = eliminateCloseToOpenGapsCheckbox?.checked !== false;
   params.set('eliminateCloseToOpenGaps', String(eliminateGaps));
-  if (timeStart != null && timeStart >= 0) params.set('timeStart', String(timeStart));
+  params.set('timeStart', String(timeStart));
   params.set('timeEnd', String(timeEnd));
   const res = await fetchWithRetry(`/api/markets/${encodeURIComponent(marketAddress)}/candles?${params.toString()}`);
   const body = (await res.json().catch(() => ({}))) as { data?: Array<{ time: number; open: string; high: string; low: string; close: string; volume?: string }> };
@@ -2672,6 +2694,7 @@ function initLocalFilterSwitches(): void {
   });
 }
 initLocalFilterSwitches();
+applyDefaultRemoteTimeRange();
 
 if (candlesResolutionSelect) {
   candlesResolutionSelect.addEventListener('change', () => {
