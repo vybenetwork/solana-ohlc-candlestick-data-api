@@ -99,11 +99,50 @@ a:hover {
   background: linear-gradient(180deg, #22d3ee 0%, #3b82f6 55%, #8b5cf6 100%);
 }
 
-.page-masthead__title-block {
+.page-masthead__head {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
   margin-bottom: 1.15rem;
+}
+
+.page-masthead__title-block {
+  flex: 1 1 280px;
+  min-width: 0;
+  margin-bottom: 0;
   padding-left: 0.15rem;
+}
+
+.page-masthead__visual {
+  flex: 0 1 180px;
+  max-width: 180px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.page-masthead__visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 900px) {
+  .page-masthead__visual {
+    flex: 0 1 auto;
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-masthead__visual {
+    display: none;
+  }
 }
 
 .page-masthead__title-block::after {
