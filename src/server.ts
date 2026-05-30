@@ -3,6 +3,7 @@
  */
 
 import express, { type Request, type Response } from 'express';
+import path from 'path';
 import { loadEnv, getApiKey, PUBLIC_DIR } from './config.js';
 import { createClient } from './api/index.js';
 import { toHumanReadableError } from './api/client.js';
@@ -23,6 +24,16 @@ const app = express();
 const client = createClient(apiKey);
 
 app.use(express.json());
+
+const SOCIAL_IMAGE = path.join(PUBLIC_DIR, 'og.jpg');
+for (const socialImagePath of ['/og.jpg', '/solana-ohlc-candlestick-data-api.jpg']) {
+  app.get(socialImagePath, (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.type('image/jpeg');
+    res.sendFile(SOCIAL_IMAGE);
+  });
+}
+
 app.use(express.static(PUBLIC_DIR));
 
 const PROGRAM_LABEL_CONCURRENCY = 3;

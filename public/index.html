@@ -30,7 +30,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart demo powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=8" />
+    <link rel="stylesheet" href="app.css?v=11" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -49,6 +49,8 @@
           </p>
         </div>
         <nav class="page-masthead__nav" aria-label="Documentation and community links">
+          <div class="page-masthead__nav-row page-masthead__nav-row--primary">
+          <div class="page-masthead__nav-cluster">
           <div class="page-masthead__group page-masthead__group--repo">
             <span class="page-masthead__label">Repository</span>
             <div class="page-masthead__btns">
@@ -67,20 +69,21 @@
               </a>
             </div>
           </div>
-          <div class="page-masthead__group">
+          </div>
+          <div class="page-masthead__group page-masthead__group--endpoints">
             <span class="page-masthead__label">Endpoints</span>
             <div class="page-masthead__btns">
               <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_token_trade_ohlc_v4" target="_blank" rel="noopener noreferrer">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--endpoint" aria-hidden="true"></span>
-                <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Token Trade OHLC</span>
+                <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Token OHLC</span>
               </a>
               <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_market_filtered_ohlcv_v4" target="_blank" rel="noopener noreferrer">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--endpoint" aria-hidden="true"></span>
-                <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Market/Pool OHLCV</span>
+                <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Market OHLCV</span>
               </a>
             </div>
           </div>
-          <div class="page-masthead__group">
+          <div class="page-masthead__group page-masthead__group--community">
             <span class="page-masthead__label">Community</span>
             <div class="page-masthead__btns">
               <a class="page-masthead__btn page-masthead__btn--social" href="https://t.me/VybeNetwork_Official" target="_blank" rel="noopener noreferrer">
@@ -89,9 +92,10 @@
               </a>
               <a class="page-masthead__btn page-masthead__btn--social" href="https://x.com/Vybe_Network" target="_blank" rel="noopener noreferrer">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--x" aria-hidden="true"></span>
-                X
+                Follow Us on X
               </a>
             </div>
+          </div>
           </div>
         </nav>
       </header>
