@@ -9,8 +9,9 @@ dist/
 .DS_Store
 *.log
 
-# Frontend is built from src/frontend/app.ts
+# Frontend is built from src/frontend/
 public/app.js
+public/token-stats-render.js
 
 # Stray file
 npm

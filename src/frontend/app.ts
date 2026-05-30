@@ -1,7 +1,8 @@
 /**
- * Historical trades UI — built from TypeScript; compiles to public/app.js.
- * No imports to keep a single-file build (tsc emits one script).
+ * OHLC candlestick UI — built from TypeScript; compiles to public/app.js.
  */
+
+import { renderTokenStats, renderTokenStatsEmpty, vybeBodyToTokenData } from './token-stats-render.js';
 
 interface CrosshairParam {
   time?: number;
@@ -125,18 +126,8 @@ const tradesBody = document.getElementById('tradesBody') as HTMLElement;
 
 const tokenLoading = document.getElementById('tokenLoading') as HTMLElement;
 const tokenError = document.getElementById('tokenError') as HTMLElement;
-const tokenLogo = document.getElementById('tokenLogo') as HTMLImageElement;
 const tokenSymbol = document.getElementById('tokenSymbol') as HTMLElement;
 const tokenName = document.getElementById('tokenName') as HTMLElement;
-const tokenMint = document.getElementById('tokenMint') as HTMLElement;
-const tokenDecimals = document.getElementById('tokenDecimals') as HTMLElement;
-const tokenVerified = document.getElementById('tokenVerified') as HTMLElement;
-const tokenCategory = document.getElementById('tokenCategory') as HTMLElement;
-const tokenPriceUsd = document.getElementById('tokenPriceUsd') as HTMLElement;
-const tokenMarketCapUsd = document.getElementById('tokenMarketCapUsd') as HTMLElement;
-const tokenVolume24hUsd = document.getElementById('tokenVolume24hUsd') as HTMLElement;
-const tokenVolume24hToken = document.getElementById('tokenVolume24hToken') as HTMLElement;
-const tokenUpdateTime = document.getElementById('tokenUpdateTime') as HTMLElement;
 
 
 const candlesLoading = document.getElementById('candlesLoading') as HTMLElement | null;
@@ -1406,20 +1397,7 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
 }
 
 function renderTokenEmpty(): void {
-  tokenLogo.style.display = 'none';
-  tokenLogo.src = '';
-  tokenLogo.alt = '';
-  tokenSymbol.textContent = '—';
-  tokenName.textContent = '—';
-  tokenMint.textContent = '—';
-  tokenDecimals.textContent = '—';
-  tokenVerified.textContent = '—';
-  tokenCategory.textContent = '—';
-  tokenPriceUsd.textContent = '—';
-  tokenMarketCapUsd.textContent = '—';
-  tokenVolume24hUsd.textContent = '—';
-  tokenVolume24hToken.textContent = '—';
-  tokenUpdateTime.textContent = '—';
+  renderTokenStatsEmpty();
 }
 
 function topCounts(items: Array<string | undefined>, n: number): Array<{ key: string; count: number }> {
@@ -1450,20 +1428,9 @@ async function fetchTokenMeta(mint: string): Promise<void> {
       return;
     }
 
-    const symbol = body.symbol?.trim() || '—';
-    tokenSymbol.textContent = symbol;
-    tokenName.textContent = body.name?.trim() || '—';
-    tokenMint.innerHTML = solscanLinkAccount(body.mintAddress || mint, body.mintAddress || mint);
-    tokenDecimals.textContent =
-      body.decimals != null ? String(body.decimals) : body.decimal != null ? String(body.decimal) : '—';
-    tokenVerified.textContent = body.verified === true ? 'Yes' : body.verified === false ? 'No' : '—';
-    tokenCategory.textContent = body.category?.trim() || '—';
-    tokenPriceUsd.textContent = fmtUsd(body.price);
-    tokenMarketCapUsd.textContent = fmtUsd(body.marketCap);
-    tokenVolume24hUsd.textContent = fmtUsd(body.usdValueVolume24h);
-    tokenVolume24hToken.textContent = fmtMaybeNumber(body.tokenAmountVolume24h, 2) + (symbol !== '—' ? ` ${symbol}` : '');
-    tokenUpdateTime.textContent = body.updateTime ? new Date(body.updateTime * 1000).toLocaleString() : '—';
-
+    const tokenData = vybeBodyToTokenData(body as Record<string, unknown>, mint);
+    renderTokenStats(tokenData);
+    const symbol = tokenData.symbol?.trim() || '—';
     lastBaseSymbol = symbol !== '—' ? symbol : undefined;
 
     const nameStr = body.name?.trim() || '—';
@@ -1474,13 +1441,6 @@ async function fetchTokenMeta(mint: string): Promise<void> {
           ? lastCandlesFromTrades[lastCandlesFromTrades.length - 1]
           : null;
     updateCandlesChartOverlay(symbol, nameStr, lastCandle);
-
-    const logo = (body.logoUrl ?? '').trim();
-    if (logo) {
-      tokenLogo.src = logo;
-      tokenLogo.alt = body.name?.trim() || symbol;
-      tokenLogo.style.display = 'block';
-    }
   } catch (err) {
     showInlineError(tokenError, err instanceof Error ? err.message : String(err));
   } finally {

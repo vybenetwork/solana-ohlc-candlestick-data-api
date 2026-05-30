@@ -30,7 +30,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart demo powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=11" />
+    <link rel="stylesheet" href="app.css?v=12" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -295,39 +295,29 @@
 
       </section>
 
-      <section class="section-card section-card--token panel" id="tokenSection">
-        <div class="section-header">
-          <span class="section-header__marker" aria-hidden="true"></span>
-          <h2 class="section-header__title">Token metadata</h2>
-          <div class="section-loading" id="tokenLoading" hidden aria-hidden="true">
-            <span class="loading-spinner"></span>
-            <span class="loading-text">Loading…</span>
-          </div>
-          <span class="section-error" id="tokenError" hidden aria-hidden="true"></span>
-        </div>
-        <div class="token-meta-header">
-          <img id="tokenLogo" alt="" class="token-logo" style="display:none" />
-          <div>
-            <div class="token-title">
-              <span id="tokenSymbol" class="token-symbol">—</span>
-              <span id="tokenName" class="token-name">—</span>
+      <section class="section-card section-card--token token-section panel" id="tokenSection">
+        <div class="section-header section-header--token">
+          <div class="section-header-left">
+            <span class="section-header__marker" aria-hidden="true"></span>
+            <h2 class="section-header__title">Token stats &amp; metadata</h2>
+            <div class="section-loading" id="tokenLoading" hidden aria-hidden="true">
+              <span class="loading-spinner"></span>
+              <span class="loading-text">Loading…</span>
             </div>
-            <div class="token-subtitle">
-              <span class="token-subtitle-label">Mint:</span>
-              <span id="tokenMint">—</span>
+            <span class="section-error" id="tokenError" hidden aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="token-section-intro">
+          <div class="token-header">
+            <img id="tokenLogo" alt="" class="token-logo" style="display:none" />
+            <div>
+              <span id="tokenSymbol" class="symbol">—</span>
+              <span id="tokenName" class="name">—</span>
             </div>
           </div>
         </div>
-
-        <div class="token-meta-grid" id="tokenMetaGrid">
-          <div class="token-meta-item"><span class="token-meta-label">Verified</span><span id="tokenVerified">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">Category</span><span id="tokenCategory">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">Decimals</span><span id="tokenDecimals">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">Price (USD)</span><span id="tokenPriceUsd">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">Market cap (USD)</span><span id="tokenMarketCapUsd">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">24h volume (USD)</span><span id="tokenVolume24hUsd">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">24h volume (token)</span><span id="tokenVolume24hToken">—</span></div>
-          <div class="token-meta-item"><span class="token-meta-label">Last updated</span><span id="tokenUpdateTime">—</span></div>
+        <div class="token-section-content" id="tokenSectionContent">
+          <div class="token-stats-groups" id="tokenStats"></div>
         </div>
       </section>
 
@@ -512,7 +502,7 @@
       </section>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
 
