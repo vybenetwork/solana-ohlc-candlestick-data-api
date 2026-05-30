@@ -23,7 +23,7 @@ export function getApiKey(): string {
   const key = (process.env.VYBE_API_KEY ?? '').trim();
   if (!key) {
     throw new Error(
-      'VYBE_API_KEY is required. Copy .env.example to .env and add your key from https://vybenetwork.com/pricing'
+      'VYBE_API_KEY is required. Copy .env.example to .env and add your key from https://vybe.fyi/api-pricing'
     );
   }
   return key;
