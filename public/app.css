@@ -658,10 +658,11 @@ a:hover {
 .section-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(165deg, rgba(26, 27, 32, 0.98) 0%, rgba(18, 18, 22, 0.99) 100%);
-  border-color: #2e2e36;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-  padding: 1.1rem 1.15rem 1.15rem;
+  border-radius: 16px;
+  border: 1px solid var(--vybe-border);
+  padding: 1.35rem 1.3rem 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
 .section-card::before {
@@ -670,28 +671,74 @@ a:hover {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  border-radius: 12px 0 0 12px;
+  width: 4px;
+  border-radius: 16px 0 0 16px;
+  z-index: 1;
+}
+
+.section-card--remote {
+  border-color: rgba(59, 130, 246, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 40, 0.25) 0%, rgba(10, 12, 20, 0.25) 50%, rgba(14, 22, 38, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
 .section-card--remote::before {
   background: linear-gradient(180deg, #3b82f6, #22d3ee);
 }
 
+.section-card--token {
+  border-color: rgba(139, 92, 246, 0.32);
+  background:
+    linear-gradient(155deg, rgba(28, 24, 38, 0.25) 0%, rgba(11, 10, 18, 0.25) 50%, rgba(20, 16, 34, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(167, 139, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
 .section-card--token::before {
   background: linear-gradient(180deg, #a78bfa, #8b5cf6);
+}
+
+.section-card--chart {
+  border-color: rgba(34, 197, 94, 0.32);
+  background:
+    linear-gradient(155deg, rgba(18, 30, 24, 0.25) 0%, rgba(10, 14, 12, 0.25) 50%, rgba(14, 28, 26, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(34, 197, 94, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
 .section-card--chart::before {
   background: linear-gradient(180deg, #22c55e, #14b8a6);
 }
 
+.section-card--rebuild {
+  border-color: rgba(245, 158, 11, 0.32);
+  background:
+    linear-gradient(155deg, rgba(34, 26, 18, 0.25) 0%, rgba(14, 11, 10, 0.25) 50%, rgba(28, 18, 14, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(245, 158, 11, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
 .section-card--rebuild::before {
   background: linear-gradient(180deg, #f59e0b, #f97316);
 }
 
+.section-card--trades {
+  border-color: rgba(96, 165, 250, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 42, 0.25) 0%, rgba(10, 12, 18, 0.25) 50%, rgba(16, 22, 40, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
 .section-card--trades::before {
   background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
+
+.section-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .section-card .section-header {
@@ -3161,6 +3208,53 @@ tr:hover td {
   border-radius: 12px;
   padding: 1.1rem 1.15rem;
   margin-bottom: 1rem;
+}
+
+.section-card.panel {
+  background: unset;
+  border: unset;
+  border-radius: 16px;
+  box-shadow: unset;
+}
+
+.section-card.panel.section-card--remote {
+  border: 1px solid rgba(59, 130, 246, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 40, 0.25) 0%, rgba(10, 12, 20, 0.25) 50%, rgba(14, 22, 38, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card.panel.section-card--token {
+  border: 1px solid rgba(139, 92, 246, 0.32);
+  background:
+    linear-gradient(155deg, rgba(28, 24, 38, 0.25) 0%, rgba(11, 10, 18, 0.25) 50%, rgba(20, 16, 34, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(167, 139, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card.panel.section-card--chart {
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  background:
+    linear-gradient(155deg, rgba(18, 30, 24, 0.25) 0%, rgba(10, 14, 12, 0.25) 50%, rgba(14, 28, 26, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(34, 197, 94, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card.panel.section-card--rebuild {
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  background:
+    linear-gradient(155deg, rgba(34, 26, 18, 0.25) 0%, rgba(14, 11, 10, 0.25) 50%, rgba(28, 18, 14, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(245, 158, 11, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card.panel.section-card--trades {
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 42, 0.25) 0%, rgba(10, 12, 18, 0.25) 50%, rgba(16, 22, 40, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
 .panel h2 {
