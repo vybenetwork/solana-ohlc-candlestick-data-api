@@ -529,7 +529,7 @@ function vybeLinkAccount(addr: string | undefined, text?: string): string {
   if (!addr) return '—';
   const href = VYBE_ACCOUNT + encodeURIComponent(addr);
   const label = text ?? truncate(addr, 3, 3);
-  return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${addr}">${label}</a>`;
+  return `<a href="${href}" target="_blank" rel="noopener" title="${addr}">${label}</a>`;
 }
 
 /** Solscan link for accounts (markets, programs, mints). Use vybeLinkAccount for wallets only. */
@@ -537,7 +537,7 @@ function solscanLinkAccount(addr: string | undefined, text?: string): string {
   if (!addr) return '—';
   const href = SOLSCAN_ACCOUNT + encodeURIComponent(addr);
   const label = text ?? truncate(addr, 3, 3);
-  return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${addr}">${label}</a>`;
+  return `<a href="${href}" target="_blank" rel="noopener" title="${addr}">${label}</a>`;
 }
 
 function formatTime(blockTime: number | undefined): string {
@@ -1343,7 +1343,7 @@ function buildLocalFilterRows(remoteTradesOverride?: VybeTrade[]): void {
               <input type="checkbox" class="per-quote-exclude-market" ${!isMarketExcluded ? 'checked' : ''} data-market="${marketAddress}" aria-label="Include market" />
             </label>
             <span class="per-quote-market-indent"></span>
-            <a href="${marketLink}" target="_blank" rel="noopener noreferrer" class="per-quote-market-link" title="${marketAddress}">${escapeHtml(poolTitle)}</a>
+            <a href="${marketLink}" target="_blank" rel="noopener" class="per-quote-market-link" title="${marketAddress}">${escapeHtml(poolTitle)}</a>
             <span class="meta">(${isMarketExcluded ? 0 : filteredCount}/${totalCount})</span>
           </td>
           <td class="per-quote-market-status-cell" style="text-align:center"></td>
@@ -2198,10 +2198,10 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
           const marketOtherPart =
             marketOtherClass ? `<span class="${marketOtherClass}">(${otherSymbol})</span>` : `(${otherSymbol})`;
           const market = t.marketAddress
-            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.marketAddress)}" target="_blank" rel="noopener noreferrer" title="${t.marketAddress}">${truncate(t.marketAddress, 4, 4)} ${marketOtherPart}</a>`
+            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.marketAddress)}" target="_blank" rel="noopener" title="${t.marketAddress}">${truncate(t.marketAddress, 4, 4)} ${marketOtherPart}</a>`
             : '—';
           const program = t.programAddress
-            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.programAddress)}" target="_blank" rel="noopener noreferrer" title="${t.programAddress}">${programDisplayLabel(t.programAddress)}</a>`
+            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.programAddress)}" target="_blank" rel="noopener" title="${t.programAddress}">${programDisplayLabel(t.programAddress)}</a>`
             : '—';
           const authority = (t.authorityAddress ?? '').trim();
           const feePayer = (t.feePayerAddress ?? '').trim();
@@ -2223,7 +2223,7 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
                       ? feePayerLink
                       : '—';
           const txid = t.signature
-            ? `<a href="${SOLSCAN_TX}${encodeURIComponent(t.signature)}" target="_blank" rel="noopener noreferrer" title="${t.signature}" class="txid-icon" aria-label="View transaction">↗</a>`
+            ? `<a href="${SOLSCAN_TX}${encodeURIComponent(t.signature)}" target="_blank" rel="noopener" title="${t.signature}" class="txid-icon" aria-label="View transaction">↗</a>`
             : '—';
 
           return `<tr>

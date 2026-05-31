@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Solana OHLC Candlestick Data API App</title>
-    <meta name="description" content="Solana API app to fetch, display, and export OHLC candlestick data for SPL &amp; Token-2022 tokens: price charts, backtesting, and on-chain analytics kit." />
+    <meta name="description" content="Build Solana OHLC charts with the Vybe Solana API for SPL and Token-2022 tokens: resolutions, wick filters, backtesting exports and on-chain charting tools." />
     <meta name="keywords" content="Solana OHLC, candlestick API, Vybe API, SPL token, Token-2022, price charts, backtesting, market candles, trade history, candlestick data, Solana DEX" />
     <meta name="author" content="Vybe Network" />
     <meta name="robots" content="index, follow" />
@@ -15,7 +15,7 @@
     <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="https://solana-ohlc-candlestick-data-api.vybenetwork.com/" />
     <meta property="og:title" content="Solana OHLC Candlestick Data API App" />
-    <meta property="og:description" content="Solana API app to fetch, display, and export OHLC candlestick data for SPL &amp; Token-2022 tokens: price charts, backtesting, and on-chain analytics kit." />
+    <meta property="og:description" content="Build Solana OHLC charts with the Vybe Solana API for SPL and Token-2022 tokens: resolutions, wick filters, backtesting exports and on-chain charting tools." />
     <meta property="og:image" content="https://solana-ohlc-candlestick-data-api.vybenetwork.com/solana-ohlc-candlestick-data-api.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -25,12 +25,12 @@
     <meta name="twitter:site" content="@Vybe_Network" />
     <meta name="twitter:creator" content="@Vybe_Network" />
     <meta name="twitter:title" content="Solana OHLC Candlestick Data API App" />
-    <meta name="twitter:description" content="Solana API app to fetch, display, and export OHLC candlestick data for SPL &amp; Token-2022 tokens: price charts, backtesting, and on-chain analytics kit." />
+    <meta name="twitter:description" content="Build Solana OHLC charts with the Vybe Solana API for SPL and Token-2022 tokens: resolutions, wick filters, backtesting exports and on-chain charting tools." />
     <meta name="twitter:image" content="https://solana-ohlc-candlestick-data-api.vybenetwork.com/solana-ohlc-candlestick-data-api.jpg" />
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart API app powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=24" />
+    <link rel="stylesheet" href="app.css?v=28" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -46,7 +46,7 @@
               Solana <span class="page-masthead__title-accent">OHLC</span> Candlestick Data
             </h1>
             <p class="page-masthead__description">
-              Solana API app to fetch, display, and export OHLC candlestick data for SPL &amp; Token-2022 tokens: price charts, backtesting, and on-chain analytics kit.
+              Build Solana OHLC charts with the Vybe Solana API for SPL and Token-2022 tokens: resolutions, wick filters, backtesting exports and on-chain charting tools.
             </p>
           </div>
           <div class="page-masthead__visual" aria-hidden="true">
@@ -59,7 +59,7 @@
           <div class="page-masthead__group page-masthead__group--repo">
             <span class="page-masthead__label">Repository</span>
             <div class="page-masthead__btns">
-              <a class="page-masthead__btn page-masthead__btn--github" href="https://github.com/vybenetwork/solana-ohlc-candlestick-data-api" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--github" href="https://github.com/vybenetwork/solana-ohlc-candlestick-data-api" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--github" aria-hidden="true"></span>
                 Clone this repo
               </a>
@@ -68,7 +68,7 @@
           <div class="page-masthead__group">
             <span class="page-masthead__label">Guides</span>
             <div class="page-masthead__btns">
-              <a class="page-masthead__btn page-masthead__btn--docs" href="https://docs.vybenetwork.com/docs/fetch-ohlc-candles" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--docs" href="https://docs.vybenetwork.com/docs/fetch-ohlc-candles" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--docs" aria-hidden="true"></span>
                 <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Fetch OHLC candles</span>
               </a>
@@ -78,11 +78,11 @@
           <div class="page-masthead__group page-masthead__group--endpoints">
             <span class="page-masthead__label">Endpoints</span>
             <div class="page-masthead__btns">
-              <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_token_trade_ohlc_v4" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_token_trade_ohlc_v4" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--endpoint" aria-hidden="true"></span>
                 <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Token OHLC</span>
               </a>
-              <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_market_filtered_ohlcv_v4" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--api" href="https://docs.vybenetwork.com/reference/get_market_filtered_ohlcv_v4" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--endpoint" aria-hidden="true"></span>
                 <span class="page-masthead__btn-text"><span class="page-masthead__btn-prefix">Docs:</span> Market OHLCV</span>
               </a>
@@ -91,11 +91,11 @@
           <div class="page-masthead__group page-masthead__group--community">
             <span class="page-masthead__label">Community</span>
             <div class="page-masthead__btns">
-              <a class="page-masthead__btn page-masthead__btn--social" href="https://t.me/VybeNetwork_Official" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--social" href="https://t.me/VybeNetwork_Official" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--telegram" aria-hidden="true"></span>
                 Telegram
               </a>
-              <a class="page-masthead__btn page-masthead__btn--social" href="https://x.com/Vybe_Network" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--social" href="https://x.com/Vybe_Network" target="_blank" rel="noopener">
                 <span class="page-masthead__btn-icon page-masthead__btn-icon--x" aria-hidden="true"></span>
                 Follow Us on X
               </a>
@@ -106,23 +106,23 @@
           <div class="page-masthead__group page-masthead__group--related">
             <span class="page-masthead__label">Other Related API Demos</span>
             <div class="page-masthead__btns page-masthead__btns--related">
-              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-token" href="https://solana-token-stats-metadata-api.vybenetwork.com/" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-token" href="https://solana-token-stats-metadata-api.vybenetwork.com/">
                 <span class="page-masthead__demo-icon-wrap" aria-hidden="true"><span class="page-masthead__btn-icon page-masthead__btn-icon--demo-token"></span></span>
                 <span class="page-masthead__btn-text">Token Stats &amp; Info</span>
               </a>
-              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-trades" href="https://solana-historical-trade-data-api.vybenetwork.com/" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-trades" href="https://solana-historical-trade-data-api.vybenetwork.com/">
                 <span class="page-masthead__demo-icon-wrap" aria-hidden="true"><span class="page-masthead__btn-icon page-masthead__btn-icon--demo-trades"></span></span>
                 <span class="page-masthead__btn-text">Historical Trades</span>
               </a>
-              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-wallet" href="https://solana-wallet-pnl-profit-and-loss-api.vybenetwork.com/" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-wallet" href="https://solana-wallet-pnl-profit-and-loss-api.vybenetwork.com/">
                 <span class="page-masthead__demo-icon-wrap" aria-hidden="true"><span class="page-masthead__btn-icon page-masthead__btn-icon--demo-wallet"></span></span>
                 <span class="page-masthead__btn-text">Wallet Profit &amp; Loss</span>
               </a>
-              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-holders" href="https://solana-top-token-holders-and-whales-api.vybenetwork.com/" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-holders" href="https://solana-top-token-holders-and-whales-api.vybenetwork.com/">
                 <span class="page-masthead__demo-icon-wrap" aria-hidden="true"><span class="page-masthead__btn-icon page-masthead__btn-icon--demo-holders"></span></span>
                 <span class="page-masthead__btn-text">Top Token Holders</span>
               </a>
-              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-traders" href="https://solana-top-traders-wallets-and-tokens-api.vybenetwork.com/" target="_blank" rel="noopener noreferrer">
+              <a class="page-masthead__btn page-masthead__btn--demo page-masthead__btn--demo-traders" href="https://solana-top-traders-wallets-and-tokens-api.vybenetwork.com/">
                 <span class="page-masthead__demo-icon-wrap" aria-hidden="true"><span class="page-masthead__btn-icon page-masthead__btn-icon--demo-traders"></span></span>
                 <span class="page-masthead__btn-text">Top Token Traders</span>
               </a>

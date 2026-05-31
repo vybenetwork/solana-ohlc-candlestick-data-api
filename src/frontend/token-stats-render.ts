@@ -388,7 +388,7 @@ function renderToken(t: TokenData): void {
   const sym = (t.symbol || '').toUpperCase();
   const dashTxt = escapeHtmlText('—');
   const mintLink = mintTrim
-    ? `<a href="${VYBE_TOKEN}${encodeURIComponent(mintTrim)}" target="_blank" rel="noopener noreferrer" class="mono" title="${escapeHtmlAttr(mintTrim)}">${truncateMintMiddle(mintTrim)}</a>`
+    ? `<a href="${VYBE_TOKEN}${encodeURIComponent(mintTrim)}" target="_blank" rel="noopener" class="mono" title="${escapeHtmlAttr(mintTrim)}">${truncateMintMiddle(mintTrim)}</a>`
     : '';
   const decVal = t.decimal ?? t.decimals;
   const overview: TokenStatSectionSpec = {
