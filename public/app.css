@@ -10,13 +10,13 @@ body {
   color: #e4e4e7;
   min-height: 100vh;
   /* Lock desktop-style layouts site-wide; narrow viewports scroll horizontally. */
-  min-width: 1200px;
+  min-width: 1150px;
 }
 
 /* Scrollbar: black track, grey thumb */
 html {
   overflow-x: auto;
-  min-width: 1200px;
+  min-width: 1150px;
   scrollbar-color: #71717a #000000; /* thumb, track */
   scrollbar-width: thin;
 }
@@ -46,9 +46,7 @@ a:hover {
 }
 
 .container {
-  width: 100%;
-  min-width: 1200px;
-  max-width: 1200px;
+  max-width: 1150px;
   margin: 0 auto;
 }
 
@@ -73,8 +71,7 @@ a:hover {
     0 1px 0 rgba(255, 255, 255, 0.06) inset,
     0 20px 48px rgba(0, 0, 0, 0.4);
   position: relative;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: hidden;
 }
 
 .page-masthead::before {
@@ -255,7 +252,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  min-width: min-content;
+  min-width: 0;
 }
 
 .page-masthead__label {
@@ -664,7 +661,7 @@ a:hover {
 
 .section-card {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   border-radius: 16px;
   border: 1px solid var(--vybe-border);
   padding: 1.35rem 1.3rem 1.2rem;
