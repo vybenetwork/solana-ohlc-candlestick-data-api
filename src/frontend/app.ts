@@ -95,6 +95,7 @@ const eliminateCloseToOpenGapsCheckbox = document.getElementById('eliminateClose
 const maxPagesInput = document.getElementById('maxPages') as HTMLInputElement | null;
 
 const fetchBtn = document.getElementById('fetchBtn') as HTMLButtonElement;
+const fetchBtnText = document.getElementById('fetchBtnText') as HTMLElement | null;
 const exportBtn = document.getElementById('exportBtn') as HTMLButtonElement;
 const exportAllBtn = document.getElementById('exportAllBtn') as HTMLButtonElement;
 const loadingIndicator = document.getElementById('loadingIndicator') as HTMLElement;
@@ -2843,8 +2844,9 @@ if (candlesSourceSelect && candlesResolutionSelect) {
 }
 
 function updateFetchButtonLabel(): void {
-  if (!fetchBtn) return;
-  fetchBtn.textContent = candlesSourceSelect?.value === 'trades' ? 'Fetch Trades for Candles' : 'Fetch Candles';
+  const label = candlesSourceSelect?.value === 'trades' ? 'Fetch Trades for Candles' : 'Fetch Candles';
+  if (fetchBtnText) fetchBtnText.textContent = label;
+  else if (fetchBtn) fetchBtn.textContent = label;
 }
 if (candlesPagesWrap) {
   candlesPagesWrap.hidden = candlesSourceSelect?.value !== 'trades';

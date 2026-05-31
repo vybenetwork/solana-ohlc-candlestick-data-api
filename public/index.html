@@ -30,7 +30,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart API app powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=41" />
+    <link rel="stylesheet" href="app.css?v=43" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -316,9 +316,9 @@
         </div>
 
         <div class="actions">
-          <button type="button" id="fetchBtn">Fetch Candles</button>
-          <button type="button" id="exportBtn" disabled>Export current page CSV</button>
-          <button type="button" id="exportAllBtn" disabled>Export paginated CSV</button>
+          <button type="button" id="fetchBtn" class="vybe-action-btn vybe-action-btn--fetch fetch-btn-attention"><span class="vybe-action-btn__icon field-icon icon-download" aria-hidden="true"></span><span class="vybe-action-btn__text" id="fetchBtnText">Fetch Candles</span></button>
+          <button type="button" id="exportBtn" class="vybe-action-btn vybe-action-btn--export" disabled><span class="vybe-action-btn__icon field-icon icon-download" aria-hidden="true"></span><span class="vybe-action-btn__text">Export current page CSV</span></button>
+          <button type="button" id="exportAllBtn" class="vybe-action-btn vybe-action-btn--export" disabled><span class="vybe-action-btn__icon field-icon icon-pages" aria-hidden="true"></span><span class="vybe-action-btn__text">Export paginated CSV</span></button>
           <div class="loading" id="loadingIndicator" hidden aria-hidden="true">
             <span class="loading-spinner"></span>
             <span class="loading-text">Loading…</span>

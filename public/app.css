@@ -1067,11 +1067,85 @@ button:disabled {
   margin-left: 12px;
 }
 
-/* Initial attention state for Fetch trades button */
+/* Masthead-style fetch / export action buttons */
+.vybe-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.52rem 0.85rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  text-transform: none;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.vybe-action-btn--fetch {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.vybe-action-btn--fetch:hover:not(:disabled) {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.vybe-action-btn--export {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.vybe-action-btn--export:hover:not(:disabled) {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.vybe-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.vybe-action-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.vybe-action-btn__icon.field-icon {
+  position: relative;
+  left: auto;
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  opacity: 1;
+  background: transparent;
+  border-radius: 0;
+}
+
+.vybe-action-btn__icon.field-icon::after {
+  background: currentColor;
+}
+
 .fetch-btn-attention {
   border-color: #22c55e;
   box-shadow: 0 0 0 1px #22c55e;
   animation: fetch-btn-pulse 1.2s ease-in-out infinite;
+}
+
+.vybe-action-btn--fetch.fetch-btn-attention {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  color: #bbf7d0;
 }
 
 @keyframes fetch-btn-pulse {
@@ -3070,25 +3144,6 @@ tr:hover td {
 
 .loading-text {
   margin: 0;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: none;
-  border-radius: 6px;
-  background: #3b82f6;
-  color: #fff;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #2563eb;
-}
-
-button:active {
-  transform: scale(0.98);
 }
 
 .panel {
