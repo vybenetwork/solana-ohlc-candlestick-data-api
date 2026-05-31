@@ -9,10 +9,13 @@ body {
   background: #0f0f12;
   color: #e4e4e7;
   min-height: 100vh;
+  /* Lock desktop-style layouts site-wide; narrow viewports scroll horizontally. */
+  min-width: 1200px;
 }
 
 /* Scrollbar: black track, grey thumb */
 html {
+  overflow-x: auto;
   scrollbar-color: #71717a #000000; /* thumb, track */
   scrollbar-width: thin;
 }
