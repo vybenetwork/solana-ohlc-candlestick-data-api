@@ -735,6 +735,10 @@ a:hover {
   box-shadow: 0 0 10px rgba(96, 165, 250, 0.45);
 }
 
+.section-card--trades .section-header {
+  border-bottom: none;
+}
+
 .section-header__title {
   margin: 0;
   font-size: 1.05rem;
@@ -1782,35 +1786,91 @@ button:disabled {
 
 .trades-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, 0.525fr) 2.1fr;
-  gap: 0.75rem;
-  margin: 0 0 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2.85fr);
+  gap: 0.65rem;
+  margin: 0.35rem 0 1rem;
 }
 
 .trades-summary-item {
-  background: #0f0f12;
-  border: 1px solid #27272a;
-  border-radius: 10px;
-  padding: 0.75rem;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8rem;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 3.5rem;
+  padding: 0.65rem 0.8rem 0.7rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid rgba(63, 63, 70, 0.5);
+  background: linear-gradient(155deg, rgba(28, 28, 34, 0.92) 0%, rgba(14, 14, 17, 0.98) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 6px 18px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.trades-summary-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 10px 0 0 10px;
+  opacity: 0.9;
+}
+
+.trades-summary-item--count::before {
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
+
+.trades-summary-item--programs::before {
+  background: linear-gradient(180deg, #a78bfa, #7c3aed);
+}
+
+.trades-summary-item--markets::before {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+}
+
+.trades-summary-item--quotes::before {
+  background: linear-gradient(180deg, #2dd4bf, #14b8a6);
+}
+
+.trades-summary-item--range::before {
+  background: linear-gradient(180deg, #38bdf8, #2563eb);
 }
 
 .trades-summary-label {
-  color: #a1a1aa;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #71717a;
 }
 
-.trades-summary-item span:last-child {
+.trades-summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fafafa;
+  line-height: 1.15;
+}
+
+.trades-summary-value--range {
+  font-size: 0.76rem;
   font-weight: 600;
-  color: #e4e4e7;
+  color: #d4d4d8;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {
   .trades-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trades-summary-item--range {
+    grid-column: 1 / -1;
   }
 }
 

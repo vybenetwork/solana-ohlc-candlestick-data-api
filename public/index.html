@@ -30,7 +30,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart API app powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=36" />
+    <link rel="stylesheet" href="app.css?v=38" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -491,25 +491,25 @@
           <span class="section-error" id="tradesError" hidden aria-hidden="true"></span>
         </div>
         <div class="trades-summary-grid" id="tradesSummary" aria-live="polite">
-          <div class="trades-summary-item">
+          <div class="trades-summary-item trades-summary-item--count">
             <span class="trades-summary-label">Trades loaded</span>
-            <span id="tradesSummaryCount">0</span>
+            <span class="trades-summary-value" id="tradesSummaryCount">0</span>
           </div>
-          <div class="trades-summary-item">
+          <div class="trades-summary-item trades-summary-item--programs">
             <span class="trades-summary-label">Programs</span>
-            <span id="tradesSummaryPrograms">0</span>
+            <span class="trades-summary-value" id="tradesSummaryPrograms">0</span>
           </div>
-          <div class="trades-summary-item">
+          <div class="trades-summary-item trades-summary-item--markets">
             <span class="trades-summary-label">Markets</span>
-            <span id="tradesSummaryMarkets">0</span>
+            <span class="trades-summary-value" id="tradesSummaryMarkets">0</span>
           </div>
-          <div class="trades-summary-item">
+          <div class="trades-summary-item trades-summary-item--quotes">
             <span class="trades-summary-label">Quote tokens</span>
-            <span id="tradesSummaryQuotes">0</span>
+            <span class="trades-summary-value" id="tradesSummaryQuotes">0</span>
           </div>
-          <div class="trades-summary-item">
+          <div class="trades-summary-item trades-summary-item--range">
             <span class="trades-summary-label">Time range</span>
-            <span id="tradesSummaryTime">—</span>
+            <span class="trades-summary-value trades-summary-value--range" id="tradesSummaryTime">—</span>
           </div>
         </div>
         <div class="table-wrap table-wrap--scroll">

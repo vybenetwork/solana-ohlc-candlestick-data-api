@@ -884,10 +884,12 @@ const PER_QUOTE_PLACEHOLDER_MARKET_ROW_COUNT = 5;
 function buildPerQuotePlaceholderTable(): void {
   if (!perQuoteFiltersContainer) return;
   const placeholderQuoteMint = getSelectedChartQuoteMint();
-  const placeholderLabel =
+  const placeholderLabelRaw =
     CHART_QUOTE_OPTIONS.find((o) => o.mint === placeholderQuoteMint)?.label ??
     HARDCODED_QUOTE_MINTS[placeholderQuoteMint] ??
     truncate(placeholderQuoteMint, 4, 4);
+  const placeholderLabel =
+    placeholderLabelRaw === 'WSOL' || placeholderLabelRaw === 'wSOL' ? 'SOL' : placeholderLabelRaw;
   const marketRows = Array.from({ length: PER_QUOTE_PLACEHOLDER_MARKET_ROW_COUNT }, () => `
     <tr class="per-quote-market-row per-quote-placeholder-row">
       <td class="per-quote-market-cell"><span class="per-quote-market-indent"></span>—</td>
