@@ -1555,14 +1555,15 @@ button:disabled {
 }
 #tradesTable th:nth-child(2),
 #tradesTable td:nth-child(2) {
-  width: 52px;
-  max-width: 52px;
+  width: 58px;
+  max-width: 58px;
 }
 
 .trade-type-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.18rem;
   padding: 0.08rem 0.42rem;
   border-radius: 4px;
   border: 2px solid currentColor;
@@ -1571,6 +1572,21 @@ button:disabled {
   letter-spacing: 0.03em;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
+}
+
+.trade-type-side-icon {
+  display: inline-block;
+  font-size: 0.52rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.trade-type-side-icon--buy {
+  color: #22c55e;
+}
+
+.trade-type-side-icon--sell {
+  color: #ef4444;
 }
 
 .trade-type-chip--buy {
@@ -1707,10 +1723,18 @@ button:disabled {
   white-space: normal;
 }
 #tradesTable td:nth-child(8).authority-fee-payer-double {
-  padding-top: 0.25rem;
-  padding-bottom: 0.2rem;
-  vertical-align: top;
+  padding-top: 0.15rem;
+  padding-bottom: 0.15rem;
+  vertical-align: middle;
 }
+
+#tradesTable td.authority-fee-payer-double .authority-main-value {
+  font-size: 0.85em;
+  line-height: 1.1;
+  display: inline-block;
+  max-width: 100%;
+}
+
 #tradesTable td:nth-child(8).authority-fee-payer-single {
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;
@@ -1719,7 +1743,7 @@ button:disabled {
 #tradesTable th:nth-child(9),
 #tradesTable td:nth-child(9) { width: 24px; max-width: 24px; min-width: 24px; }
 #tradesTable .fee-payer-cell {
-  font-size: 5pt;
+  font-size: 6pt;
   color: #facc15;
   line-height: 1.15;
   display: block;

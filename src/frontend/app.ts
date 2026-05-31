@@ -535,8 +535,12 @@ function wrapAmountClass(html: string, sym: string, isAnalysedMint = false): str
 /** Outlined BUY/SELL chip (same style as wallet PnL assets gain column). */
 function renderTradeTypeChip(type: string): string {
   const norm = type.trim().toLowerCase();
-  if (norm === 'buy') return '<span class="trade-type-chip trade-type-chip--buy">BUY</span>';
-  if (norm === 'sell') return '<span class="trade-type-chip trade-type-chip--sell">SELL</span>';
+  if (norm === 'buy') {
+    return '<span class="trade-type-chip trade-type-chip--buy"><span class="trade-type-side-icon trade-type-side-icon--buy" aria-hidden="true">▲</span>BUY</span>';
+  }
+  if (norm === 'sell') {
+    return '<span class="trade-type-chip trade-type-chip--sell"><span class="trade-type-side-icon trade-type-side-icon--sell" aria-hidden="true">▼</span>SELL</span>';
+  }
   return type === '—' || !type ? '—' : escapeHtml(type);
 }
 
@@ -2311,7 +2315,7 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
               : authority === feePayer
                 ? vybeLinkAccount(authority || undefined, truncate(authority || undefined, 4, 4))
                 : authority && feePayer
-                  ? `${vybeLinkAccount(authority, truncate(authority, 4, 4))}<br>${feePayerLink}`
+                  ? `<span class="authority-main-value">${vybeLinkAccount(authority, truncate(authority, 4, 4))}</span><br>${feePayerLink}`
                   : authority
                     ? vybeLinkAccount(authority, truncate(authority, 4, 4))
                     : feePayer
