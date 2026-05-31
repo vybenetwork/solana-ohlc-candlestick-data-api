@@ -2175,11 +2175,16 @@ function programDisplayLabel(addr: string | undefined): string {
   return first;
 }
 
+function setTradesLoadedCount(el: HTMLElement, filtered: number, remote: number): void {
+  el.innerHTML = `<span class="trades-summary-count-main">${escapeHtml(filtered.toLocaleString())}</span><span class="trades-summary-count-total"> / ${escapeHtml(remote.toLocaleString())}</span>`;
+}
+
 function updateTradesSummary(trades: VybeTrade[], meta: { remoteCount: number; filteredCount: number }): void {
   if (!tradesSummaryEl) return;
   if (tradesSummaryCountEl) {
+    const remote = meta.remoteCount ?? trades.length;
     const filtered = meta.filteredCount ?? trades.length;
-    tradesSummaryCountEl.textContent = filtered.toLocaleString();
+    setTradesLoadedCount(tradesSummaryCountEl, filtered, remote);
   }
   if (trades.length === 0) {
     if (tradesSummaryProgramsEl) tradesSummaryProgramsEl.textContent = '0';

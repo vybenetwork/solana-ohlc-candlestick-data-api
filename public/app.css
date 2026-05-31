@@ -1855,6 +1855,19 @@ button:disabled {
   line-height: 1.15;
 }
 
+#tradesSummaryCount.trades-summary-value {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.trades-summary-count-total {
+  font-size: 0.5em;
+  font-weight: 600;
+  color: #a1a1aa;
+  letter-spacing: 0.01em;
+}
+
 .trades-summary-value--range {
   font-size: 0.76rem;
   font-weight: 600;
