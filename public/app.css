@@ -1507,20 +1507,134 @@ button:disabled {
   top: 0;
   z-index: 2;
   background: #18181b;
+  font-size: calc(0.56rem * 1.15);
+  line-height: 1.1;
+  font-weight: 500;
+  color: #a1a1aa;
+  padding: 0.28rem 0.26rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #3f3f46;
+}
+
+#tradesTable td {
+  padding: 0.25rem 0.26rem;
+  font-size: calc(0.66rem * 1.15);
+  vertical-align: middle;
+}
+
+#tradesTable tbody tr.trades-placeholder-row {
+  height: 28px;
+}
+
+#tradesTable tbody tr.trades-placeholder-row td {
+  height: 28px;
+  max-height: 28px;
+  box-sizing: border-box;
 }
 
 #tradesTable th:nth-child(1),
 #tradesTable td:nth-child(1) {
-  width: 100px;
-  max-width: 100px;
+  text-align: left;
+}
+
+#tradesTable th:not(:nth-child(1)),
+#tradesTable td:not(:nth-child(1)) {
+  text-align: center;
+}
+
+#tradesTable th:nth-child(1),
+#tradesTable td:nth-child(1) {
+  width: 180px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#tradesTable .trades-date-time {
+  font-weight: 700;
+}
 #tradesTable th:nth-child(2),
 #tradesTable td:nth-child(2) {
-  width: 40px;
-  max-width: 40px;
+  width: 52px;
+  max-width: 52px;
 }
+
+.trade-type-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.08rem 0.42rem;
+  border-radius: 4px;
+  border: 2px solid currentColor;
+  font-weight: 600;
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.trade-type-chip--buy {
+  color: #22c55e;
+}
+
+.trade-type-chip--sell {
+  color: #ef4444;
+}
+
+#tradesTable .market-pool-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.15rem;
+  padding: 0.06rem 0.35rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-weight: 600;
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#tradesTable .market-pool-chip.amount-usdc {
+  color: #86efac;
+}
+
+#tradesTable .market-pool-chip.amount-sol {
+  color: #c4b5fd;
+}
+
+#tradesTable .market-pool-chip.market-other-yellow {
+  color: #facc15;
+}
+
+#tradesTable .market-pool-chip.market-pool-chip--neutral {
+  color: #a1a1aa;
+}
+
+#tradesTable .program-dex-chip-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+#tradesTable .program-dex-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0.06rem 0.35rem;
+  border-radius: 4px;
+  border: 2px solid currentColor;
+  font-weight: 600;
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 #tradesTable th:nth-child(3),
 #tradesTable td:nth-child(3) {
   width: 90px;
@@ -1542,26 +1656,55 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#tradesTable th:nth-child(3),
+#tradesTable th:nth-child(4),
+#tradesTable th:nth-child(5) {
+  text-align: left;
+}
+
+#tradesTable.trades-table--placeholder th:nth-child(3),
+#tradesTable.trades-table--placeholder th:nth-child(4),
+#tradesTable.trades-table--placeholder th:nth-child(5) {
+  text-align: center;
+}
+
+#tradesTable tbody tr:not(.trades-placeholder-row) td:nth-child(3),
+#tradesTable tbody tr:not(.trades-placeholder-row) td:nth-child(4),
+#tradesTable tbody tr:not(.trades-placeholder-row) td:nth-child(5) {
+  text-align: left;
+}
+
+#tradesTable tbody tr.trades-placeholder-row td:nth-child(1) {
+  text-align: left;
+}
+
+#tradesTable tbody tr.trades-placeholder-row td:not(:nth-child(1)) {
+  text-align: center;
+}
+
 #tradesTable th:nth-child(6),
 #tradesTable td:nth-child(6) {
-  width: 102px;
-  max-width: 102px;
+  width: 120px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 #tradesTable th:nth-child(7),
 #tradesTable td:nth-child(7) {
-  width: 72px;
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#tradesTable th:nth-child(8),
-#tradesTable td:nth-child(8) {
   width: 100px;
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
+}
+#tradesTable th:nth-child(8),
+#tradesTable td:nth-child(8) {
+  width: 90px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
 }
 #tradesTable td:nth-child(8).authority-fee-payer-double {
   padding-top: 0.25rem;
@@ -1574,7 +1717,7 @@ button:disabled {
   vertical-align: middle;
 }
 #tradesTable th:nth-child(9),
-#tradesTable td:nth-child(9) { width: 24px; max-width: 24px; min-width: 24px; text-align: center; }
+#tradesTable td:nth-child(9) { width: 24px; max-width: 24px; min-width: 24px; }
 #tradesTable .fee-payer-cell {
   font-size: 5pt;
   color: #facc15;
@@ -1592,7 +1735,7 @@ button:disabled {
 
 .trades-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, 0.7fr) 1.4fr;
+  grid-template-columns: repeat(4, 0.525fr) 2.1fr;
   gap: 0.75rem;
   margin: 0 0 0.75rem;
 }

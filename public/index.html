@@ -30,7 +30,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart API app powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=28" />
+    <link rel="stylesheet" href="app.css?v=36" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -517,15 +517,15 @@
           <table id="tradesTable">
             <thead>
               <tr>
-                <th style="text-align:left">Time (DD/MM/YY)</th>
-                <th style="text-align:center">Type</th>
-                <th style="text-align:right">Price</th>
-                <th style="text-align:right">Input mint</th>
-                <th style="text-align:right">Output mint</th>
-                <th style="text-align:left">Market</th>
-                <th style="text-align:left">Program</th>
-                <th style="text-align:left">Authority (Fee Payer)</th>
-                <th style="text-align:center">TXID</th>
+                <th>Date<br />(Local Time)</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Input<br />Token</th>
+                <th>Output<br />Token</th>
+                <th>Market<br />(Pool)</th>
+                <th>Program<br />(DEX Protocol)</th>
+                <th>Authority<br />(Fee Payer)</th>
+                <th>TXID</th>
               </tr>
             </thead>
             <tbody id="tradesBody"></tbody>

@@ -123,6 +123,17 @@ const tradesSummaryMarketsEl = document.getElementById('tradesSummaryMarkets') a
 const tradesSummaryQuotesEl = document.getElementById('tradesSummaryQuotes') as HTMLElement | null;
 const tradesSummaryTimeEl = document.getElementById('tradesSummaryTime') as HTMLElement | null;
 const tradesBody = document.getElementById('tradesBody') as HTMLElement;
+const tradesTable = document.getElementById('tradesTable') as HTMLTableElement | null;
+
+/** Empty trades table skeleton (stable layout before fetch). */
+const TRADES_PLACEHOLDER_ROW_COUNT = 12;
+
+const TRADES_PLACEHOLDER_ROW_HTML =
+  '<tr class="trades-placeholder-row"><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="authority-fee-payer-single">—</td><td>—</td></tr>';
+
+function buildTradesPlaceholderRowsHtml(): string {
+  return Array.from({ length: TRADES_PLACEHOLDER_ROW_COUNT }, () => TRADES_PLACEHOLDER_ROW_HTML).join('');
+}
 
 const tokenLoading = document.getElementById('tokenLoading') as HTMLElement;
 const tokenError = document.getElementById('tokenError') as HTMLElement;
@@ -521,6 +532,72 @@ function wrapAmountClass(html: string, sym: string, isAnalysedMint = false): str
   return `<span class="amount-other-value">${valuePart}</span> <span class="amount-other-symbol">${symbolPart}</span>`;
 }
 
+/** Outlined BUY/SELL chip (same style as wallet PnL assets gain column). */
+function renderTradeTypeChip(type: string): string {
+  const norm = type.trim().toLowerCase();
+  if (norm === 'buy') return '<span class="trade-type-chip trade-type-chip--buy">BUY</span>';
+  if (norm === 'sell') return '<span class="trade-type-chip trade-type-chip--sell">SELL</span>';
+  return type === '—' || !type ? '—' : escapeHtml(type);
+}
+
+/** Outlined pool symbol chip in market column (stables / SOL / other colours unchanged). */
+function renderMarketPoolChip(symbol: string, toneClass: string): string {
+  const label = (symbol || '').trim();
+  if (!label || label === '—') return '';
+  const tone = toneClass || 'market-pool-chip--neutral';
+  return `<span class="market-pool-chip ${tone}">${escapeHtml(label)}</span>`;
+}
+
+const PROGRAM_DEX_CHIP_COLORS = [
+  '#60a5fa',
+  '#34d399',
+  '#f472b6',
+  '#a78bfa',
+  '#fb923c',
+  '#2dd4bf',
+  '#f87171',
+  '#e879f9',
+  '#38bdf8',
+  '#4ade80',
+  '#facc15',
+  '#c4b5fd',
+] as const;
+
+function programFullLabel(addr: string): string {
+  return (programLabelCache[addr] ?? WELL_KNOWN_PROGRAMS[addr] ?? addr).trim();
+}
+
+/** First word of program label — e.g. Raydium and Raydium CLMM share one colour group. */
+function programGroupKey(label: string): string {
+  const words = label.trim().split(/\s+/);
+  return (words[0] ?? label).toLowerCase();
+}
+
+function buildProgramGroupColorMap(trades: VybeTrade[]): Map<string, string> {
+  const keys = new Set<string>();
+  for (const t of trades) {
+    const addr = (t.programAddress ?? '').trim();
+    if (!addr) continue;
+    keys.add(programGroupKey(programFullLabel(addr)));
+  }
+  const sorted = [...keys].sort();
+  const map = new Map<string, string>();
+  sorted.forEach((key, i) => {
+    map.set(key, PROGRAM_DEX_CHIP_COLORS[i % PROGRAM_DEX_CHIP_COLORS.length]);
+  });
+  return map;
+}
+
+function renderProgramDexChip(addr: string | undefined, colorMap: Map<string, string>): string {
+  const a = (addr ?? '').trim();
+  if (!a) return '—';
+  const display = programDisplayLabel(a);
+  if (!display || display === '—') return '—';
+  const color = colorMap.get(programGroupKey(programFullLabel(a))) ?? '#a1a1aa';
+  const href = `${SOLSCAN_ACCOUNT}${encodeURIComponent(a)}`;
+  return `<a href="${href}" target="_blank" rel="noopener" class="program-dex-chip-link" title="${escapeHtml(a)}"><span class="program-dex-chip" style="color:${color}">${escapeHtml(display)}</span></a>`;
+}
+
 function isStableQuoteSymbol(sym: string): boolean {
   return STABLE_QUOTE_SYMBOLS.has(sym.toUpperCase());
 }
@@ -540,12 +617,31 @@ function solscanLinkAccount(addr: string | undefined, text?: string): string {
   return `<a href="${href}" target="_blank" rel="noopener" title="${addr}">${label}</a>`;
 }
 
-function formatTime(blockTime: number | undefined): string {
-  if (!blockTime) return '—';
+function formatTimeParts(blockTime: number | undefined): { time: string; date: string } | null {
+  if (!blockTime) return null;
   const d = new Date(blockTime * 1000);
-  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-  const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  return `${time} ${date}`;
+  const time = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+  const weekday = d.toLocaleString('en-US', { weekday: 'long' });
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const day = d.getDate();
+  const year = d.getFullYear();
+  return { time, date: `${weekday} ${month} ${day} ${year}` };
+}
+
+function formatTime(blockTime: number | undefined): string {
+  const parts = formatTimeParts(blockTime);
+  return parts ? `${parts.time} ${parts.date}` : '—';
+}
+
+function formatTimeCellHtml(blockTime: number | undefined): string {
+  const parts = formatTimeParts(blockTime);
+  if (!parts) return '—';
+  return `<span class="trades-date-time">${escapeHtml(parts.time)}</span> ${escapeHtml(parts.date)}`;
 }
 
 function parseUnixSecondsFromDatetimeLocal(v: string): number | undefined {
@@ -2125,11 +2221,13 @@ function updateTradesSummary(trades: VybeTrade[], meta: { remoteCount: number; f
 function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filteredCount: number; query: string }): void {
   tradesMeta.textContent = '';
   updateTradesSummary(trades, meta);
+  tradesTable?.classList.toggle('trades-table--placeholder', trades.length === 0);
+  const programColorMap = buildProgramGroupColorMap(trades);
 
   tradesBody.innerHTML = trades.length
     ? trades
         .map((t) => {
-          const time = formatTime(t.blockTime);
+          const time = formatTimeCellHtml(t.blockTime);
           const inputSym = quoteSymOrTrunc(t.baseMintAddress);
           const outputSym = quoteSymOrTrunc(t.quoteMintAddress);
           const analysedMint = mintAddressInput.value.trim();
@@ -2195,14 +2293,11 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
                   ? 'amount-sol'
                   : 'market-other-yellow'
               : '';
-          const marketOtherPart =
-            marketOtherClass ? `<span class="${marketOtherClass}">(${otherSymbol})</span>` : `(${otherSymbol})`;
+          const marketPoolChip = renderMarketPoolChip(otherSymbol, marketOtherClass);
           const market = t.marketAddress
-            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.marketAddress)}" target="_blank" rel="noopener" title="${t.marketAddress}">${truncate(t.marketAddress, 4, 4)} ${marketOtherPart}</a>`
+            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.marketAddress)}" target="_blank" rel="noopener" title="${t.marketAddress}">${truncate(t.marketAddress, 4, 4)}${marketPoolChip ? ` ${marketPoolChip}` : ''}</a>`
             : '—';
-          const program = t.programAddress
-            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(t.programAddress)}" target="_blank" rel="noopener" title="${t.programAddress}">${programDisplayLabel(t.programAddress)}</a>`
-            : '—';
+          const program = renderProgramDexChip(t.programAddress, programColorMap);
           const authority = (t.authorityAddress ?? '').trim();
           const feePayer = (t.feePayerAddress ?? '').trim();
           const feePayerLink = feePayer
@@ -2228,18 +2323,18 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
 
           return `<tr>
             <td>${time}</td>
-            <td style="text-align:center">${type}</td>
-            <td style="text-align:right">${price}</td>
-            <td style="text-align:right">${inputAmount}</td>
-            <td style="text-align:right">${outputAmount}</td>
+            <td>${renderTradeTypeChip(type)}</td>
+            <td>${price}</td>
+            <td>${inputAmount}</td>
+            <td>${outputAmount}</td>
             <td>${market}</td>
             <td>${program}</td>
             <td class="${authorityFeePayerCellClass}">${authorityFeePayer}</td>
-            <td style="text-align:center">${txid}</td>
+            <td>${txid}</td>
           </tr>`;
         })
         .join('')
-    : '<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>';
+    : buildTradesPlaceholderRowsHtml();
 }
 
 function toCsv(trades: VybeTrade[]): string {
