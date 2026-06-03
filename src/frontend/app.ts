@@ -818,8 +818,7 @@ function formatTimeParts(blockTime: number | undefined): { time: string; date: s
   const weekday = d.toLocaleString('en-US', { weekday: 'short' }).replace(/\.$/, '');
   const month = d.toLocaleString('en-US', { month: 'short' });
   const day = d.getDate();
-  const year = d.getFullYear();
-  return { time, date: `${weekday} ${month} ${day} ${year}` };
+  return { time, date: `${weekday} ${month} ${day}` };
 }
 
 function formatTime(blockTime: number | undefined): string {
