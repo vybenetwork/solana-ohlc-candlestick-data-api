@@ -1309,6 +1309,371 @@ button:disabled {
   }
 }
 
+.section-card--summary {
+  border-color: rgba(96, 165, 250, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 42, 0.25) 0%, rgba(10, 12, 18, 0.25) 50%, rgba(16, 22, 40, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card--summary::before {
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
+
+.section-card--summary .section-header__marker {
+  background: #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.45);
+}
+
+.section-card--summary .section-header {
+  border-bottom: none;
+}
+
+.summary-box .summary-mini-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.summary-box .table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.summary-box .summary-mini-table--programs col.summary-col-program {
+  width: 46%;
+}
+
+.summary-box .summary-mini-table--programs col.summary-col-markets-stat,
+.summary-box .summary-mini-table--programs col.summary-col-quote-tokens-stat {
+  width: 13%;
+}
+
+.summary-box .summary-mini-table--programs col.summary-col-count {
+  width: 28%;
+}
+
+.summary-box .summary-mini-table--markets {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.summary-box .summary-mini-table--markets col.summary-col-market {
+  width: 84px !important;
+}
+
+.summary-box .summary-mini-table--markets col.summary-col-program {
+  width: 105px !important;
+  min-width: 105px !important;
+}
+
+.summary-box .summary-mini-table--markets col.summary-col-pair {
+  width: auto;
+}
+
+.summary-box .summary-mini-table--markets col.summary-col-count {
+  width: 76px !important;
+  min-width: 76px !important;
+}
+
+.summary-box .summary-mini-table--markets thead th:nth-child(4),
+.summary-box .summary-mini-table--markets tbody td.summary-cell-count {
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  box-sizing: border-box;
+}
+
+.summary-box .summary-mini-table--markets thead th:nth-child(3),
+.summary-box .summary-mini-table--markets tbody td.summary-cell-program {
+  width: 105px !important;
+  min-width: 105px !important;
+  max-width: 105px !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.summary-box .summary-mini-table--markets .summary-cell-program .program-dex-chip-link {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.summary-box .summary-mini-table--markets .summary-cell-program .program-dex-chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-box .summary-mini-table--markets thead th:first-child,
+.summary-box .summary-mini-table--markets tbody td.summary-cell-market {
+  width: 84px !important;
+  max-width: 84px !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-size: calc(0.66rem * 1.15 * 0.92);
+}
+
+.summary-box .summary-mini-table--markets .summary-cell-market .market-cell-link {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.summary-box .summary-mini-table--markets .summary-cell-market .market-address-label {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(0.58rem * 1.15 * 0.92);
+}
+
+.summary-box .summary-mini-table--quotes col.summary-col-symbol {
+  width: 20%;
+}
+
+.summary-box .summary-mini-table--quotes col.summary-col-mint {
+  width: 41%;
+}
+
+.summary-box .summary-mini-table--quotes col.summary-col-markets-stat {
+  width: 12%;
+}
+
+.summary-box .summary-mini-table--quotes col.summary-col-count {
+  width: 27%;
+}
+
+.summary-box .summary-mini-table thead th:nth-child(2),
+.summary-box .summary-mini-table thead th:nth-child(3),
+.summary-box .summary-mini-table--quotes thead th:nth-child(3) {
+  white-space: nowrap;
+  padding-left: 0.12rem;
+  padding-right: 0.12rem;
+}
+
+.summary-box .summary-mini-table--programs thead th:nth-child(2),
+.summary-box .summary-mini-table--programs tbody td:nth-child(2) {
+  padding-right: 0.5rem;
+}
+
+.summary-box .summary-mini-table--programs thead th:nth-child(3),
+.summary-box .summary-mini-table--programs tbody td:nth-child(3) {
+  padding-left: 0.5rem;
+}
+
+.summary-box .summary-mini-table .summary-cell-program,
+.summary-box .summary-mini-table .summary-cell-market,
+.summary-box .summary-mini-table .summary-cell-mint,
+.summary-box .summary-mini-table .summary-cell-pair,
+.summary-box .summary-mini-table .summary-cell-symbol,
+.summary-box .summary-mini-table .summary-cell-stat,
+.summary-box .summary-mini-table .summary-cell-count {
+  overflow: hidden;
+}
+
+.summary-box .summary-mini-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #18181b;
+  font-size: calc(0.56rem * 1.15);
+  line-height: 1.1;
+  font-weight: 500;
+  color: #a1a1aa;
+  padding: 0.28rem 0.35rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #3f3f46;
+  text-align: left;
+}
+
+.summary-box .summary-mini-table thead th:last-child {
+  text-align: center;
+}
+
+.summary-box .summary-mini-table th,
+.summary-box .summary-mini-table td {
+  box-sizing: border-box;
+}
+
+.summary-box .summary-mini-table td {
+  padding: 0.28rem 0.35rem;
+  font-size: calc(0.66rem * 1.15);
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(63, 63, 70, 0.45);
+}
+
+.summary-box .summary-mini-table tbody tr:not(.summary-placeholder-row):nth-child(even) td {
+  background: rgba(24, 24, 27, 0.55);
+}
+
+.summary-box .summary-mini-table tbody tr:not(.summary-placeholder-row):hover td {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.summary-box .summary-mini-table .summary-cell-stat {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+
+.summary-box .summary-mini-table .summary-cell-count {
+  text-align: center;
+}
+
+.summary-box .summary-count-cell {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.summary-box .summary-tx-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.12rem;
+  font-size: calc(0.5rem * 1.15);
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.summary-box .summary-tx-count-label {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.summary-box .summary-tx-count-num {
+  font-size: 1.18em;
+  font-weight: 600;
+}
+
+.summary-box .summary-bar-tier--red .summary-tx-count,
+.summary-box .summary-bar-tier--red .summary-tx-count-num,
+.summary-box .summary-bar-tier--red .summary-tx-count-label {
+  color: #ef4444;
+}
+
+.summary-box .summary-bar-tier--orange .summary-tx-count,
+.summary-box .summary-bar-tier--orange .summary-tx-count-num,
+.summary-box .summary-bar-tier--orange .summary-tx-count-label {
+  color: #fb923c;
+}
+
+.summary-box .summary-bar-tier--yellow .summary-tx-count,
+.summary-box .summary-bar-tier--yellow .summary-tx-count-num,
+.summary-box .summary-bar-tier--yellow .summary-tx-count-label {
+  color: #facc15;
+}
+
+.summary-box .summary-bar-tier--light-green .summary-tx-count,
+.summary-box .summary-bar-tier--light-green .summary-tx-count-num,
+.summary-box .summary-bar-tier--light-green .summary-tx-count-label {
+  color: #86efac;
+}
+
+.summary-box .summary-bar-tier--green .summary-tx-count,
+.summary-box .summary-bar-tier--green .summary-tx-count-num,
+.summary-box .summary-bar-tier--green .summary-tx-count-label {
+  color: #22c55e;
+}
+
+.summary-box .summary-cell-count .trades-cell-with-volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  max-width: 100%;
+}
+
+.summary-box .summary-cell-count .trade-volume-bars {
+  flex-shrink: 0;
+  height: 11px;
+  gap: 1.5px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar {
+  width: 2.5px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar:nth-child(1) {
+  height: 3px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar:nth-child(2) {
+  height: 4.5px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar:nth-child(3) {
+  height: 6px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar:nth-child(4) {
+  height: 7.5px;
+}
+
+.summary-box .summary-cell-count .trade-volume-bar:nth-child(5) {
+  height: 9px;
+}
+
+.summary-box .summary-mini-table .program-dex-chip-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.summary-box .summary-mini-table .program-dex-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-weight: 600;
+  font-size: calc(0.58rem * 1.15);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-box .summary-mini-table .market-pool-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-weight: 600;
+  font-size: calc(0.58rem * 1.15);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.summary-box .summary-mini-table .market-pool-chip.amount-usdc {
+  color: #86efac;
+}
+
+.summary-box .summary-mini-table .market-pool-chip.amount-sol {
+  color: #c4b5fd;
+}
+
+.summary-box .summary-mini-table .market-pool-chip.market-other-yellow {
+  color: #facc15;
+}
+
+.summary-box .summary-mini-table .market-pool-chip.market-pool-chip--neutral {
+  color: #a1a1aa;
+}
+
 .candles-controls {
   display: flex;
   flex-wrap: wrap;
@@ -3566,6 +3931,14 @@ tr:hover td {
     linear-gradient(155deg, rgba(18, 30, 24, 0.25) 0%, rgba(10, 14, 12, 0.25) 50%, rgba(14, 28, 26, 0.25) 100%),
     linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
   box-shadow: 0 1px 0 rgba(34, 197, 94, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
+}
+
+.section-card.panel.section-card--summary {
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  background:
+    linear-gradient(155deg, rgba(22, 28, 42, 0.25) 0%, rgba(10, 12, 18, 0.25) 50%, rgba(16, 22, 40, 0.25) 100%),
+    linear-gradient(155deg, rgba(24, 26, 34, 0.98) 0%, rgba(12, 13, 18, 0.99) 50%, rgba(15, 18, 28, 0.98) 100%);
+  box-shadow: 0 1px 0 rgba(96, 165, 250, 0.02) inset, 0 20px 48px rgba(0, 0, 0, 0.4);
 }
 
 .section-card.panel.section-card--rebuild {

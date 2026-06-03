@@ -508,6 +508,87 @@
         <div id="perQuoteFiltersContainer" class="local-filters-dynamic"></div>
       </section>
 
+      <section class="section-card section-card--summary panel" id="summarySection">
+        <div class="section-header">
+          <span class="section-header__marker" aria-hidden="true"></span>
+          <h2 class="section-header__title" id="summaryTitle">Trades summary</h2>
+          <div class="section-loading" id="summaryLoading" hidden aria-hidden="true">
+            <span class="loading-spinner"></span>
+            <span class="loading-text">Loading…</span>
+          </div>
+          <span class="section-error" id="summaryError" hidden aria-hidden="true"></span>
+        </div>
+        <p class="meta" id="summaryMeta">—</p>
+        <div class="summary-grid">
+          <div class="summary-box">
+            <h3>Programs (top 5)</h3>
+            <div class="table-wrap">
+              <table class="summary-mini-table summary-mini-table--programs">
+                <colgroup>
+                  <col class="summary-col-program" />
+                  <col class="summary-col-markets-stat" />
+                  <col class="summary-col-quote-tokens-stat" />
+                  <col class="summary-col-count" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th style="text-align:left">Program</th>
+                    <th style="text-align:center">Markets</th>
+                    <th style="text-align:center" title="Quote tokens">Quotes</th>
+                    <th style="text-align:center">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="topProgramsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="summary-box">
+            <h3>Markets / Pools (Top 5)</h3>
+            <div class="table-wrap">
+              <table class="summary-mini-table summary-mini-table--markets">
+                <colgroup>
+                  <col class="summary-col-market" style="width:84px" />
+                  <col class="summary-col-pair" />
+                  <col class="summary-col-program" style="width:105px" />
+                  <col class="summary-col-count" style="width:76px" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th style="text-align:left">Market</th>
+                    <th style="text-align:left">Pair</th>
+                    <th style="text-align:left">Program</th>
+                    <th style="text-align:center">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="topMarketsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="summary-box">
+            <h3>Quote mints (top 5)</h3>
+            <div class="table-wrap">
+              <table class="summary-mini-table summary-mini-table--quotes">
+                <colgroup>
+                  <col class="summary-col-symbol" />
+                  <col class="summary-col-mint" />
+                  <col class="summary-col-markets-stat" />
+                  <col class="summary-col-count" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th style="text-align:left">Symbol</th>
+                    <th style="text-align:left">Mint</th>
+                    <th style="text-align:center">Markets</th>
+                    <th style="text-align:center">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="topQuotesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section-card section-card--trades panel">
         <div class="section-header">
           <span class="section-header__marker" aria-hidden="true"></span>

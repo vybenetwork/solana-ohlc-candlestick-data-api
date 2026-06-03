@@ -125,6 +125,14 @@ const tradesSummaryTimeEl = document.getElementById('tradesSummaryTime') as HTML
 const tradesBody = document.getElementById('tradesBody') as HTMLElement;
 const tradesTable = document.getElementById('tradesTable') as HTMLTableElement | null;
 
+const summaryLoading = document.getElementById('summaryLoading') as HTMLElement;
+const summaryError = document.getElementById('summaryError') as HTMLElement;
+const summaryTitle = document.getElementById('summaryTitle') as HTMLElement;
+const summaryMeta = document.getElementById('summaryMeta') as HTMLElement;
+const topProgramsBody = document.getElementById('topProgramsBody') as HTMLElement;
+const topMarketsBody = document.getElementById('topMarketsBody') as HTMLElement;
+const topQuotesBody = document.getElementById('topQuotesBody') as HTMLElement;
+
 /** Empty trades table skeleton (stable layout before fetch). */
 const TRADES_PLACEHOLDER_ROW_COUNT = 20;
 
@@ -133,6 +141,30 @@ const TRADES_PLACEHOLDER_ROW_HTML =
 
 function buildTradesPlaceholderRowsHtml(): string {
   return Array.from({ length: TRADES_PLACEHOLDER_ROW_COUNT }, () => TRADES_PLACEHOLDER_ROW_HTML).join('');
+}
+
+/** Empty summary mini-tables (stable layout before fetch). */
+const TOP_SUMMARY_PLACEHOLDER_ROW_COUNT = 5;
+
+const TOP_PROGRAMS_PLACEHOLDER_ROW_HTML =
+  '<tr class="summary-placeholder-row"><td>—</td><td class="summary-cell-stat">—</td><td class="summary-cell-stat">—</td><td class="summary-cell-count">—</td></tr>';
+
+const TOP_MARKETS_PLACEHOLDER_ROW_HTML =
+  '<tr class="summary-placeholder-row"><td>—</td><td>—</td><td>—</td><td class="summary-cell-count">—</td></tr>';
+
+const TOP_QUOTES_PLACEHOLDER_ROW_HTML =
+  '<tr class="summary-placeholder-row"><td>—</td><td>—</td><td class="summary-cell-stat">—</td><td class="summary-cell-count">—</td></tr>';
+
+function buildTopProgramsPlaceholderRowsHtml(): string {
+  return Array.from({ length: TOP_SUMMARY_PLACEHOLDER_ROW_COUNT }, () => TOP_PROGRAMS_PLACEHOLDER_ROW_HTML).join('');
+}
+
+function buildTopMarketsPlaceholderRowsHtml(): string {
+  return Array.from({ length: TOP_SUMMARY_PLACEHOLDER_ROW_COUNT }, () => TOP_MARKETS_PLACEHOLDER_ROW_HTML).join('');
+}
+
+function buildTopQuotesPlaceholderRowsHtml(): string {
+  return Array.from({ length: TOP_SUMMARY_PLACEHOLDER_ROW_COUNT }, () => TOP_QUOTES_PLACEHOLDER_ROW_HTML).join('');
 }
 
 const tokenLoading = document.getElementById('tokenLoading') as HTMLElement;
@@ -173,6 +205,8 @@ const FETCH_RETRY_DELAY_MS = 2000;
 
 let lastRemoteTrades: VybeTrade[] = [];
 let lastFilteredTrades: VybeTrade[] = [];
+/** Bumped on each fetch so in-flight summary refresh skips stale runs. */
+let tradeFetchGeneration = 0;
 // Local-filtered trades excluding per-quote rules. Used to keep the per-quote table stable while tweaking per-quote min/max.
 let lastFilteredTradesForPerQuote: VybeTrade[] = [];
 let lastBaseSymbol: string | undefined;
@@ -607,6 +641,18 @@ function minMaxFromEntityCounts(counts: Map<string, number>): { min: number; max
   return { min, max };
 }
 
+/** Compact integer for TX count columns: 1194 → "1.2k", 1.1M, 2.5b. */
+function formatCompactCount(n: number): string {
+  if (!Number.isFinite(n)) return '—';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  const trim = (s: string) => s.replace(/\.0$/, '');
+  if (abs >= 1e9) return `${sign}${trim((abs / 1e9).toFixed(1))}b`;
+  if (abs >= 1e6) return `${sign}${trim((abs / 1e6).toFixed(1))}m`;
+  if (abs >= 1000) return `${sign}${trim((abs / 1000).toFixed(1))}k`;
+  return `${sign}${Math.round(abs).toLocaleString()}`;
+}
+
 /** 1 bar = 0–20%, …, 5 bars = 80–100% of analysed-token amount in the loaded set. */
 function volumeBarsFromPercentile(percentile: number): number {
   if (percentile >= 80) return 5;
@@ -708,8 +754,9 @@ function renderAuthorityCountCell(
   if (count == null || count === 0) return '—';
   const tierClass = authorityTxTierClass(count);
   const barColor = authorityTxTierColor(count);
+  const countCompact = formatCompactCount(count);
   const txLabel = count === 1 ? 'TX' : 'TXs';
-  const countMain = `<span class="authority-tx-count ${tierClass}"><span class="authority-tx-count-num">${count.toLocaleString()}</span> <span class="authority-tx-count-label">${txLabel}</span></span>`;
+  const countMain = `<span class="authority-tx-count ${tierClass}"><span class="authority-tx-count-num">${countCompact}</span> <span class="authority-tx-count-label">${txLabel}</span></span>`;
   const bars = renderScopedFrequencyBars(
     authorityKey,
     authorityCounts,
@@ -727,6 +774,74 @@ function renderMarketPoolChip(symbol: string, toneClass: string): string {
   if (!label || label === '—') return '';
   const tone = toneClass || 'market-pool-chip--neutral';
   return `<span class="market-pool-chip ${tone}">${escapeHtml(label)}</span>`;
+}
+
+function quoteSymbolToneClass(sym: string): string {
+  if (isStableQuoteSymbol(sym)) return 'amount-usdc';
+  if (displaySymbol(sym) === 'SOL') return 'amount-sol';
+  return 'market-other-yellow';
+}
+
+function renderQuoteSymbolChip(sym: string): string {
+  const label = (sym || '').trim();
+  if (!label || label === '—') return '—';
+  return renderMarketPoolChip(label, quoteSymbolToneClass(label));
+}
+
+const SUMMARY_BAR_TIER_COLORS = {
+  red: '#ef4444',
+  orange: '#fb923c',
+  yellow: '#facc15',
+  lightGreen: '#86efac',
+  green: '#22c55e',
+} as const;
+
+function summaryBarTierFromActiveBars(activeBars: number): { tierClass: string; color: string } {
+  if (activeBars <= 1) {
+    return { tierClass: 'summary-bar-tier--red', color: SUMMARY_BAR_TIER_COLORS.red };
+  }
+  if (activeBars === 2) {
+    return { tierClass: 'summary-bar-tier--orange', color: SUMMARY_BAR_TIER_COLORS.orange };
+  }
+  if (activeBars === 3) {
+    return { tierClass: 'summary-bar-tier--yellow', color: SUMMARY_BAR_TIER_COLORS.yellow };
+  }
+  if (activeBars === 4) {
+    return { tierClass: 'summary-bar-tier--light-green', color: SUMMARY_BAR_TIER_COLORS.lightGreen };
+  }
+  return { tierClass: 'summary-bar-tier--green', color: SUMMARY_BAR_TIER_COLORS.green };
+}
+
+function activeBarCountForEntity(
+  entityKey: string,
+  entityCounts: Map<string, number>,
+  countRange: { min: number; max: number } | null
+): number {
+  if (!entityKey || !countRange) return 0;
+  const entityCount = entityCounts.get(entityKey);
+  if (entityCount == null || entityCount === 0) return 0;
+  const pct = volumePercentileFromAmount(entityCount, countRange.min, countRange.max);
+  return volumeBarsFromPercentile(pct);
+}
+
+function renderSummaryCountCell(
+  entityKey: string,
+  count: number,
+  entityCounts: Map<string, number>,
+  countRange: { min: number; max: number } | null
+): string {
+  if (!entityKey || count <= 0) return '—';
+  const activeBars = activeBarCountForEntity(entityKey, entityCounts, countRange);
+  const { tierClass, color: barColor } = summaryBarTierFromActiveBars(activeBars || 1);
+  const countCompact = formatCompactCount(count);
+  const txLabel = count === 1 ? 'TX' : 'TXs';
+  const countMain = `<span class="summary-tx-count"><span class="summary-tx-count-num">${countCompact}</span> <span class="summary-tx-count-label">${txLabel}</span></span>`;
+  const bars =
+    activeBars > 0
+      ? renderColoredVolumeBars(activeBars, barColor, 'Trade count')
+      : '';
+  const inner = bars ? wrapCellWithVolumeBars(countMain, bars) : countMain;
+  return `<span class="summary-count-cell ${tierClass}">${inner}</span>`;
 }
 
 /** Market address text — tone colour only (no chip border/small font). */
@@ -1704,6 +1819,258 @@ function topCounts(items: Array<string | undefined>, n: number): Array<{ key: st
     .slice(0, n);
 }
 
+function computeProgramMarketAndQuoteStats(
+  trades: VybeTrade[],
+  baseMint: string
+): Map<string, { markets: number; quoteTokens: number }> {
+  const marketsByProgram = new Map<string, Set<string>>();
+  const quotesByProgram = new Map<string, Set<string>>();
+  for (const t of trades) {
+    const prog = (t.programAddress ?? '').trim();
+    if (!prog) continue;
+    const market = (t.marketAddress ?? '').trim();
+    if (market) {
+      let marketSet = marketsByProgram.get(prog);
+      if (!marketSet) {
+        marketSet = new Set();
+        marketsByProgram.set(prog, marketSet);
+      }
+      marketSet.add(market);
+    }
+    const quote = otherMint(t, baseMint).trim();
+    if (quote && quote !== baseMint) {
+      let quoteSet = quotesByProgram.get(prog);
+      if (!quoteSet) {
+        quoteSet = new Set();
+        quotesByProgram.set(prog, quoteSet);
+      }
+      quoteSet.add(quote);
+    }
+  }
+  const stats = new Map<string, { markets: number; quoteTokens: number }>();
+  const allPrograms = new Set([...marketsByProgram.keys(), ...quotesByProgram.keys()]);
+  for (const prog of allPrograms) {
+    stats.set(prog, {
+      markets: marketsByProgram.get(prog)?.size ?? 0,
+      quoteTokens: quotesByProgram.get(prog)?.size ?? 0,
+    });
+  }
+  return stats;
+}
+
+function computeQuoteMintMarketCounts(trades: VybeTrade[], baseMint: string): Map<string, number> {
+  const marketsByQuote = new Map<string, Set<string>>();
+  for (const t of trades) {
+    const quote = otherMint(t, baseMint).trim();
+    if (!quote || quote === baseMint) continue;
+    const market = (t.marketAddress ?? '').trim();
+    if (!market) continue;
+    let marketSet = marketsByQuote.get(quote);
+    if (!marketSet) {
+      marketSet = new Set();
+      marketsByQuote.set(quote, marketSet);
+    }
+    marketSet.add(market);
+  }
+  const counts = new Map<string, number>();
+  for (const [quote, marketSet] of marketsByQuote) {
+    counts.set(quote, marketSet.size);
+  }
+  return counts;
+}
+
+function renderSummaryEmpty(): void {
+  summaryMeta.textContent = '—';
+  topProgramsBody.innerHTML = buildTopProgramsPlaceholderRowsHtml();
+  topMarketsBody.innerHTML = buildTopMarketsPlaceholderRowsHtml();
+  topQuotesBody.innerHTML = buildTopQuotesPlaceholderRowsHtml();
+}
+
+async function renderSummaryFromTrades(trades: VybeTrade[]): Promise<void> {
+  const baseMint = mintAddressInput.value.trim();
+  const marketCount: Record<string, number> = {};
+  const marketQuoteCount: Record<string, Record<string, number>> = {};
+  const marketProgramCount: Record<string, Record<string, number>> = {};
+  trades.forEach((t) => {
+    const m = (t.marketAddress ?? '').trim();
+    const q = otherMint(t, baseMint);
+    if (!m) return;
+    marketCount[m] = (marketCount[m] ?? 0) + 1;
+    if (q && q !== baseMint) {
+      if (!marketQuoteCount[m]) marketQuoteCount[m] = {};
+      marketQuoteCount[m][q] = (marketQuoteCount[m][q] ?? 0) + 1;
+    }
+    const prog = (t.programAddress ?? '').trim();
+    if (prog) {
+      if (!marketProgramCount[m]) marketProgramCount[m] = {};
+      marketProgramCount[m][prog] = (marketProgramCount[m][prog] ?? 0) + 1;
+    }
+  });
+
+  const topMarketsRaw = Object.entries(marketCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([addr, count]) => {
+      const quoteCounts = marketQuoteCount[addr] ?? {};
+      const bestQuoteMint =
+        Object.entries(quoteCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      const programCounts = marketProgramCount[addr] ?? {};
+      const bestProgram =
+        Object.entries(programCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      return { marketAddress: addr, count, bestQuoteMint, bestProgram };
+    });
+
+  const programs = topCounts(trades.map((t) => t.programAddress), 5);
+  const quotesRaw = topCounts(
+    trades.map((t) => otherMint(t, baseMint)).filter((m) => m && m !== baseMint),
+    20
+  );
+
+  const programLabels: Record<string, string> = {};
+  programs.forEach((p) => {
+    programLabels[p.key] = WELL_KNOWN_PROGRAMS[p.key] ?? p.key;
+  });
+  const needLabelAddrs = new Set<string>();
+  for (const p of programs) {
+    if (!WELL_KNOWN_PROGRAMS[p.key]) needLabelAddrs.add(p.key);
+  }
+  for (const { bestProgram } of topMarketsRaw) {
+    if (bestProgram && !WELL_KNOWN_PROGRAMS[bestProgram]) needLabelAddrs.add(bestProgram);
+  }
+  if (needLabelAddrs.size > 0) {
+    try {
+      const r = await fetchWithRetry('/api/programs/labeled-program-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programAddresses: [...needLabelAddrs] }),
+      });
+      if (r.ok) {
+        const body = (await r.json().catch(() => ({}))) as { labels?: Record<string, string> };
+        const labels = body.labels ?? {};
+        Object.assign(programLabels, labels);
+      }
+    } catch {
+      // keep WELL_KNOWN or address fallback
+    }
+  }
+  Object.assign(programLabelCache, programLabels);
+
+  const baseSymbol = (lastBaseSymbol ?? '').toUpperCase() || '—';
+
+  const needSymbolMints = new Set<string>();
+  for (const { bestQuoteMint } of topMarketsRaw) {
+    if (bestQuoteMint && !quoteSymbolCache[bestQuoteMint] && !HARDCODED_QUOTE_MINTS[bestQuoteMint]) {
+      needSymbolMints.add(bestQuoteMint);
+    }
+  }
+  for (const q of quotesRaw.slice(0, 20)) {
+    if (!quoteSymbolCache[q.key] && !HARDCODED_QUOTE_MINTS[q.key]) needSymbolMints.add(q.key);
+  }
+  const pairQuoteSymbols: Record<string, string> = { ...HARDCODED_QUOTE_MINTS, ...quoteSymbolCache };
+  if (needSymbolMints.size > 0) {
+    try {
+      const r = await fetchWithRetry('/api/token-symbols', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mints: [...needSymbolMints] }),
+      });
+      if (r.ok) {
+        const body = (await r.json().catch(() => ({}))) as { symbols?: Record<string, string> };
+        const symbols = body.symbols ?? {};
+        Object.assign(pairQuoteSymbols, symbols);
+        Object.assign(quoteSymbolCache, symbols);
+      }
+    } catch {
+      // use cache only
+    }
+  }
+
+  const programColorMap = buildProgramGroupColorMap(trades);
+  const programCounts = computeEntityTradeCounts(trades, (t) => (t.programAddress ?? '').trim());
+  const programCountRange = minMaxFromEntityCounts(programCounts);
+  const programExtraStats = computeProgramMarketAndQuoteStats(trades, baseMint);
+  const marketCountsMap = new Map(Object.entries(marketCount));
+  const marketCountRange = minMaxFromEntityCounts(marketCountsMap);
+
+  topProgramsBody.innerHTML = programs.length
+    ? programs
+        .map((p) => {
+          const chip = renderProgramDexChip(p.key, programColorMap);
+          const extra = programExtraStats.get(p.key) ?? { markets: 0, quoteTokens: 0 };
+          return `<tr><td class="summary-cell-program">${chip}</td><td class="summary-cell-stat">${extra.markets.toLocaleString()}</td><td class="summary-cell-stat">${extra.quoteTokens.toLocaleString()}</td><td class="summary-cell-count">${renderSummaryCountCell(p.key, p.count, programCounts, programCountRange)}</td></tr>`;
+        })
+        .join('')
+    : buildTopProgramsPlaceholderRowsHtml();
+
+  const topMarketsWithPair = topMarketsRaw
+    .map(({ marketAddress, count, bestQuoteMint, bestProgram }) => {
+      const quoteSym = bestQuoteMint ? (pairQuoteSymbols[bestQuoteMint] ?? truncate(bestQuoteMint, 4, 4)) : '—';
+      const pairDisplay = bestQuoteMint ? `${baseSymbol} / ${quoteSym}` : '—';
+      return { marketAddress, count, pairDisplay, quoteSym, bestProgram };
+    })
+    .filter((m) => m.pairDisplay !== '—')
+    .slice(0, 5);
+
+  topMarketsBody.innerHTML = topMarketsWithPair.length
+    ? topMarketsWithPair
+        .map(({ marketAddress, count, quoteSym, bestProgram }) => {
+          const tone = quoteSymbolToneClass(quoteSym);
+          const marketMain = `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(marketAddress)}" target="_blank" class="market-cell-link" title="${escapeHtml(marketAddress)}">${renderMarketAddressLabel(truncate(marketAddress, 4, 4), tone)}</a>`;
+          const pairHtml = renderQuoteSymbolChip(quoteSym);
+          const programChip = renderProgramDexChip(bestProgram ?? undefined, programColorMap);
+          return `<tr><td class="summary-cell-market">${marketMain}</td><td class="summary-cell-pair">${pairHtml}</td><td class="summary-cell-program">${programChip}</td><td class="summary-cell-count">${renderSummaryCountCell(marketAddress, count, marketCountsMap, marketCountRange)}</td></tr>`;
+        })
+        .join('')
+    : buildTopMarketsPlaceholderRowsHtml();
+
+  const quotes = quotesRaw
+    .filter((q) => {
+      const s = pairQuoteSymbols[q.key] ?? HARDCODED_QUOTE_MINTS[q.key];
+      return s && s.trim() !== '' && s !== q.key;
+    })
+    .slice(0, 5);
+
+  const quoteCountsMap = new Map(quotes.map((q) => [q.key, q.count]));
+  const quoteCountRange = minMaxFromEntityCounts(quoteCountsMap);
+  const quoteMarketCounts = computeQuoteMintMarketCounts(trades, baseMint);
+
+  topQuotesBody.innerHTML = quotes.length
+    ? quotes
+        .map((q) => {
+          const sym = pairQuoteSymbols[q.key] ?? HARDCODED_QUOTE_MINTS[q.key] ?? '—';
+          const tone = quoteSymbolToneClass(sym);
+          const mintLink = `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(q.key)}" target="_blank" class="market-cell-link" title="${escapeHtml(q.key)}">${renderMarketAddressLabel(truncate(q.key, 4, 4), tone)}</a>`;
+          const marketTotal = quoteMarketCounts.get(q.key) ?? 0;
+          return `<tr>
+            <td class="summary-cell-symbol">${renderQuoteSymbolChip(sym)}</td>
+            <td class="summary-cell-mint">${mintLink}</td>
+            <td class="summary-cell-stat">${marketTotal.toLocaleString()}</td>
+            <td class="summary-cell-count">${renderSummaryCountCell(q.key, q.count, quoteCountsMap, quoteCountRange)}</td>
+          </tr>`;
+        })
+        .join('')
+    : buildTopQuotesPlaceholderRowsHtml();
+}
+
+async function refreshSummaryDisplay(gen: number): Promise<void> {
+  if (gen !== tradeFetchGeneration) return;
+  const trades = getTradesForTableDisplay();
+  const remoteForDisplay = getRemoteTradesForDisplay();
+  if (trades.length === 0) {
+    renderSummaryEmpty();
+    summaryTitle.textContent = 'Trades summary';
+    return;
+  }
+  summaryTitle.textContent = `Last ${trades.length} trades summary`;
+  summaryMeta.textContent = `From ${trades.length.toLocaleString()} filtered trade(s) (of ${remoteForDisplay.length.toLocaleString()} loaded): top 5 programs / pools / quote mints.`;
+  clearInlineError(summaryError);
+  await renderSummaryFromTrades(trades);
+}
+
+function scheduleSummaryRefresh(gen: number): void {
+  void refreshSummaryDisplay(gen).catch(() => {});
+}
+
 async function fetchTokenMeta(mint: string): Promise<void> {
   renderTokenEmpty();
   clearInlineError(tokenError);
@@ -2644,8 +3011,11 @@ function candlesToCsv(candles: Candle[]): string {
 async function onFetch(): Promise<void> {
   clearError();
   clearInlineError(tokenError);
+  clearInlineError(summaryError);
+  const fetchGen = ++tradeFetchGeneration;
   // Clear tables immediately so the user sees we're refetching.
   renderTrades([], { remoteCount: 0, filteredCount: 0, query: '' });
+  renderSummaryEmpty();
   buildPerQuotePlaceholderTable();
   // When rebuilding from trades with filter wicks on, clear chart so we never show stale or partial unfiltered wicks during fetch.
   if (candlesSourceSelect?.value === 'trades' && filterWicksCheckbox?.checked && candlesChartEl) {
@@ -2683,6 +3053,9 @@ async function onFetch(): Promise<void> {
   try {
     // Reset UI back to empty placeholders before fetching.
     renderTokenEmpty();
+    renderSummaryEmpty();
+    summaryLoading.hidden = false;
+    summaryLoading.setAttribute('aria-hidden', 'false');
 
     const mint = mintAddressInput.value.trim();
 
@@ -2728,9 +3101,12 @@ async function onFetch(): Promise<void> {
         const body = (await res.json().catch(() => ({}))) as TradesResponse & { error?: string };
         if (!res.ok) {
           showError(body.error || `Failed (${res.status})`);
+          showInlineError(summaryError, body.error || `Failed (${res.status})`);
+          summaryTitle.textContent = 'Summary unavailable';
           lastRemoteTrades = [];
           lastFilteredTrades = [];
           renderTrades([], { remoteCount: 0, filteredCount: 0, query: '' });
+          renderSummaryEmpty();
           return;
         }
         const chunk = Array.isArray(body.data) ? body.data : [];
@@ -2758,6 +3134,7 @@ async function onFetch(): Promise<void> {
             filteredCount: tableTrades.length,
             query: pages.length > 1 ? `pages ${pageFrom}..${p}` : `page ${p}`,
           });
+          scheduleSummaryRefresh(fetchGen);
           setExportButtonsState();
           if (useRebuildCandles) {
             // Build per-quote rows (and wick-filtered data) before radios so any 'change' from buildChartQuotesRadios sees filtered data.
@@ -2801,10 +3178,13 @@ async function onFetch(): Promise<void> {
       filteredCount: tableTrades.length,
       query: pages.length > 1 ? `pages=${pages[0]}..${pages[pages.length - 1]}` : `page=${pages[0]}`,
     });
+    scheduleSummaryRefresh(fetchGen);
     setExportButtonsState();
   } catch (err) {
     showError(err instanceof Error ? err.message : String(err));
   } finally {
+    summaryLoading.hidden = true;
+    summaryLoading.setAttribute('aria-hidden', 'true');
     if (candlesPagesProgress) candlesPagesProgress.textContent = '';
     if (tradesLoadingText) tradesLoadingText.textContent = 'Loading…';
     if (candlesLoadingText) candlesLoadingText.textContent = 'Loading…';
@@ -2835,6 +3215,7 @@ function onLocalFilterChange(): void {
     filteredCount: tableTrades.length,
     query: '',
   });
+  scheduleSummaryRefresh(tradeFetchGeneration);
   setExportButtonsState();
   // Build wick-filtered data before refreshing chart so we never paint unfiltered wicks.
   buildLocalFilterRows();
@@ -3097,6 +3478,7 @@ if (chartQuoteSelect) {
 
 // Initial empty state
 renderTrades([], { remoteCount: 0, filteredCount: 0, query: '' });
+renderSummaryEmpty();
 renderTokenEmpty();
 buildPerQuotePlaceholderTable();
 clearError();
