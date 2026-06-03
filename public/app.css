@@ -1986,8 +1986,8 @@ button:disabled {
 }
 #tradesTable th:nth-child(9),
 #tradesTable td:nth-child(9) {
-  width: 128px;
-  max-width: 128px;
+  width: 80px;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
@@ -2054,7 +2054,29 @@ button:disabled {
 #tradesTable .authority-tx-count {
   font-variant-numeric: tabular-nums;
   font-weight: inherit;
-  font-size: inherit;
+  font-size: 0.85em;
+  line-height: 1.1;
+}
+
+#tradesTable .authority-tx-count-num {
+  font-size: 1.12em;
+  font-weight: 600;
+}
+
+#tradesTable .authority-tx-count-label {
+  font-size: 0.88em;
+  font-weight: inherit;
+}
+
+#tradesTable td:nth-child(10) .authority-count-cell {
+  font-size: 0.85em;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 #tradesTable th:nth-child(10),
@@ -2063,17 +2085,29 @@ button:disabled {
   max-width: 58px;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 #tradesTable td:nth-child(10) .trades-cell-with-volume {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.2rem;
   vertical-align: middle;
+  line-height: 1;
+}
+
+#tradesTable td:nth-child(10) .trades-cell-with-volume__bars,
+#tradesTable td:nth-child(10) .trades-cell-with-volume__main {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
 }
 
 #tradesTable td:nth-child(10) .trade-volume-bars {
   height: 1.1em;
+  align-items: flex-end;
+  align-self: center;
 }
 
 #tradesTable td:nth-child(10) .trade-volume-bar {

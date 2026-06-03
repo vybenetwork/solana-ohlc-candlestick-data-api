@@ -709,7 +709,7 @@ function renderAuthorityCountCell(
   const tierClass = authorityTxTierClass(count);
   const barColor = authorityTxTierColor(count);
   const txLabel = count === 1 ? 'TX' : 'TXs';
-  const countMain = `<span class="authority-tx-count ${tierClass}">${count.toLocaleString()} ${txLabel}</span>`;
+  const countMain = `<span class="authority-tx-count ${tierClass}"><span class="authority-tx-count-num">${count.toLocaleString()}</span> <span class="authority-tx-count-label">${txLabel}</span></span>`;
   const bars = renderScopedFrequencyBars(
     authorityKey,
     authorityCounts,
