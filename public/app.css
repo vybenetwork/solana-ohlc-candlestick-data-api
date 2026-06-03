@@ -1990,6 +1990,35 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#tradesTable td:nth-child(7) .trade-volume-bars {
+  height: 11px;
+  gap: 1.5px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar {
+  width: 2.5px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar:nth-child(1) {
+  height: 3px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar:nth-child(2) {
+  height: 4.5px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar:nth-child(3) {
+  height: 6px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar:nth-child(4) {
+  height: 7.5px;
+}
+
+#tradesTable td:nth-child(7) .trade-volume-bar:nth-child(5) {
+  height: 9px;
+}
 #tradesTable th:nth-child(8),
 #tradesTable td:nth-child(8) {
   width: 118px;
@@ -2095,8 +2124,8 @@ button:disabled {
 
 #tradesTable th:nth-child(10),
 #tradesTable td:nth-child(10) {
-  width: 58px;
-  max-width: 58px;
+  width: 67px;
+  max-width: 67px;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
