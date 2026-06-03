@@ -1825,6 +1825,36 @@ button:disabled {
   flex-shrink: 0;
 }
 
+#tradesTable .market-cell-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  text-decoration: none;
+  color: inherit;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#tradesTable .market-cell-link .market-pool-chip {
+  margin-left: 0;
+}
+
+#tradesTable .market-address-label.amount-usdc {
+  color: #86efac;
+}
+
+#tradesTable .market-address-label.amount-sol {
+  color: #c4b5fd;
+}
+
+#tradesTable .market-address-label.market-other-yellow {
+  color: #facc15;
+}
+
+#tradesTable .market-address-label.market-pool-chip--neutral {
+  color: #a1a1aa;
+}
+
 #tradesTable .market-pool-chip {
   display: inline-flex;
   align-items: center;

@@ -669,7 +669,7 @@ function renderScopedFrequencyBars(
 function wrapCellWithVolumeBars(mainHtml: string, barsHtml: string): string {
   if (!mainHtml || mainHtml === '—') return mainHtml || '—';
   if (!barsHtml) return mainHtml;
-  return `<span class="trades-cell-with-volume"><span class="trades-cell-with-volume__main">${mainHtml}</span><span class="trades-cell-with-volume__bars">${barsHtml}</span></span>`;
+  return `<span class="trades-cell-with-volume"><span class="trades-cell-with-volume__bars">${barsHtml}</span><span class="trades-cell-with-volume__main">${mainHtml}</span></span>`;
 }
 
 /** Outlined pool symbol chip in market column (stables / SOL / other colours unchanged). */
@@ -678,6 +678,14 @@ function renderMarketPoolChip(symbol: string, toneClass: string): string {
   if (!label || label === '—') return '';
   const tone = toneClass || 'market-pool-chip--neutral';
   return `<span class="market-pool-chip ${tone}">${escapeHtml(label)}</span>`;
+}
+
+/** Market address text — tone colour only (no chip border/small font). */
+function renderMarketAddressLabel(text: string, toneClass: string): string {
+  const label = (text || '').trim();
+  if (!label || label === '—') return '';
+  const tone = toneClass || 'market-pool-chip--neutral';
+  return `<span class="market-address-label ${tone}">${escapeHtml(label)}</span>`;
 }
 
 const PROGRAM_DEX_CHIP_COLORS = [
@@ -2446,17 +2454,19 @@ function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filtered
                   ? 'amount-sol'
                   : 'market-other-yellow'
               : '';
-          const marketPoolChip = renderMarketPoolChip(otherSymbol, marketOtherClass);
+          const marketTone = marketOtherClass || 'market-pool-chip--neutral';
+          const marketPoolChip = renderMarketPoolChip(otherSymbol, marketTone);
           const marketKey = (t.marketAddress ?? '').trim();
+          const marketAddrLabel = marketKey ? renderMarketAddressLabel(truncate(marketKey, 4, 4), marketTone) : '';
           const marketMain = marketKey
-            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(marketKey)}" target="_blank" title="${marketKey}">${truncate(marketKey, 4, 4)}${marketPoolChip ? ` ${marketPoolChip}` : ''}</a>`
+            ? `<a href="${SOLSCAN_ACCOUNT}${encodeURIComponent(marketKey)}" target="_blank" class="market-cell-link" title="${escapeHtml(marketKey)}">${marketAddrLabel}${marketPoolChip}</a>`
             : '';
           const marketBars = renderScopedFrequencyBars(
             marketKey,
             marketCounts,
             marketCountRange,
             'Pool frequency',
-            marketToneClassToBarColor(marketOtherClass || 'market-pool-chip--neutral')
+            marketToneClassToBarColor(marketTone)
           );
           const market = marketMain ? wrapCellWithVolumeBars(marketMain, marketBars) : '—';
           const program = renderProgramDexChip(t.programAddress, programColorMap);
