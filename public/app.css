@@ -1720,8 +1720,8 @@ button:disabled {
 
 #tradesTable th:nth-child(1),
 #tradesTable td:nth-child(1) {
-  width: 170px;
-  max-width: 170px;
+  width: 150px;
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2010,6 +2010,19 @@ button:disabled {
   padding-bottom: 0.2rem;
   vertical-align: middle;
 }
+
+#tradesTable .authority-tx-count {
+  color: #60a5fa;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+#tradesTable .fee-payer-cell .authority-tx-count {
+  display: inline-block;
+  margin-top: 0.12rem;
+}
+
 #tradesTable th:nth-child(10),
 #tradesTable td:nth-child(10) { width: 24px; max-width: 24px; min-width: 24px; }
 #tradesTable .fee-payer-cell {
