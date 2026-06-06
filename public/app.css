@@ -1266,8 +1266,6 @@ button:disabled {
 .section-header .section-loading,
 .section-header .section-error,
 .section-header .section-warning {
-  margin: 0 0 0 6px;
-  max-height: 30px;
   align-self: center;
   flex-shrink: 1;
   min-width: 0;
