@@ -116,6 +116,7 @@ const perQuoteFiltersContainer = document.getElementById('perQuoteFiltersContain
 let wickFilteredTradesByQuote = new Map<string, VybeTrade[]>();
 
 const tradesError = document.getElementById('tradesError') as HTMLElement;
+const tradesMeta = document.getElementById('tradesMeta') as HTMLElement;
 const tradesSummaryEl = document.getElementById('tradesSummary') as HTMLElement | null;
 const tradesSummaryCountEl = document.getElementById('tradesSummaryCount') as HTMLElement | null;
 const tradesSummaryProgramsEl = document.getElementById('tradesSummaryPrograms') as HTMLElement | null;
@@ -132,6 +133,22 @@ const summaryMeta = document.getElementById('summaryMeta') as HTMLElement;
 const topProgramsBody = document.getElementById('topProgramsBody') as HTMLElement;
 const topMarketsBody = document.getElementById('topMarketsBody') as HTMLElement;
 const topQuotesBody = document.getElementById('topQuotesBody') as HTMLElement;
+const topProgramsTitle = document.getElementById('topProgramsTitle') as HTMLElement | null;
+const topMarketsTitle = document.getElementById('topMarketsTitle') as HTMLElement | null;
+const topQuotesTitle = document.getElementById('topQuotesTitle') as HTMLElement | null;
+
+const SUMMARY_TOP_MAX = 5;
+
+function summaryBoxTitle(label: string, itemCount: number): string {
+  const n = itemCount > 0 ? itemCount : SUMMARY_TOP_MAX;
+  return `${label} (Top ${n})`;
+}
+
+function updateSummaryBoxTitles(programs: number, markets: number, quotes: number): void {
+  if (topProgramsTitle) topProgramsTitle.textContent = summaryBoxTitle('Programs', programs);
+  if (topMarketsTitle) topMarketsTitle.textContent = summaryBoxTitle('Markets / Pools', markets);
+  if (topQuotesTitle) topQuotesTitle.textContent = summaryBoxTitle('Quote mints', quotes);
+}
 
 /** Empty trades table skeleton (stable layout before fetch). */
 const TRADES_PLACEHOLDER_ROW_COUNT = 20;
@@ -1902,6 +1919,7 @@ function computeQuoteMintProgramCounts(trades: VybeTrade[], baseMint: string): M
 
 function renderSummaryEmpty(): void {
   summaryMeta.textContent = '—';
+  updateSummaryBoxTitles(0, 0, 0);
   topProgramsBody.innerHTML = buildTopProgramsPlaceholderRowsHtml();
   topMarketsBody.innerHTML = buildTopMarketsPlaceholderRowsHtml();
   topQuotesBody.innerHTML = buildTopQuotesPlaceholderRowsHtml();
@@ -2074,6 +2092,8 @@ async function renderSummaryFromTrades(trades: VybeTrade[]): Promise<void> {
         })
         .join('')
     : buildTopQuotesPlaceholderRowsHtml();
+
+  updateSummaryBoxTitles(programs.length, topMarketsWithPair.length, quotes.length);
 }
 
 async function refreshSummaryDisplay(gen: number): Promise<void> {
@@ -2082,10 +2102,10 @@ async function refreshSummaryDisplay(gen: number): Promise<void> {
   const remoteForDisplay = getRemoteTradesForDisplay();
   if (trades.length === 0) {
     renderSummaryEmpty();
-    summaryTitle.textContent = 'Trades summary';
+    summaryTitle.textContent = 'Trades Summary';
     return;
   }
-  summaryTitle.textContent = `Last ${trades.length} trades summary`;
+  summaryTitle.textContent = `Last ${trades.length} Trades Summary`;
   summaryMeta.textContent = `From ${trades.length.toLocaleString()} filtered trade(s) (of ${remoteForDisplay.length.toLocaleString()} loaded): top 5 programs / pools / quote mints.`;
   clearInlineError(summaryError);
   await renderSummaryFromTrades(trades);
@@ -2755,6 +2775,35 @@ function setTradesLoadedCount(el: HTMLElement, filtered: number, remote: number)
   el.innerHTML = `<span class="trades-summary-count-main">${escapeHtml(filtered.toLocaleString())}</span><span class="trades-summary-count-total"> / ${escapeHtml(remote.toLocaleString())}</span>`;
 }
 
+function chartQuoteLabel(): string {
+  const mint = getSelectedChartQuoteMint();
+  return CHART_QUOTE_OPTIONS.find((o) => o.mint === mint)?.label ?? quoteSymOrTrunc(mint);
+}
+
+function formatTradesMeta(meta: { remoteCount: number; filteredCount: number; query: string }): string {
+  const source = candlesSourceSelect?.value ?? 'full';
+  if (meta.remoteCount === 0) {
+    if (source === 'trades') {
+      return 'Fetch trades for candles to load the table; rows match the selected chart quote after local filters.';
+    }
+    if (source === 'market') {
+      return 'Fetch candles to load trades for the selected market address.';
+    }
+    return 'Fetch candles to load vetted-market trades (USDC, USDT, PYUSD, wSOL quotes).';
+  }
+  const queryPart = meta.query ? ` (${meta.query})` : '';
+  const remote = meta.remoteCount.toLocaleString();
+  const filtered = meta.filteredCount.toLocaleString();
+  const base = `Remote: ${remote} trade(s)${queryPart}.`;
+  if (source === 'trades') {
+    return `${base} Showing: ${filtered} for chart quote ${chartQuoteLabel()} after local filters.`;
+  }
+  if (source === 'market') {
+    return `${base} Showing: ${filtered} for this market after local filters.`;
+  }
+  return `${base} Showing: ${filtered} vetted-quote trades after local filters.`;
+}
+
 function updateTradesSummary(trades: VybeTrade[], meta: { remoteCount: number; filteredCount: number }): void {
   if (!tradesSummaryEl) return;
   if (tradesSummaryCountEl) {
@@ -2810,6 +2859,7 @@ function updateTradesSummary(trades: VybeTrade[], meta: { remoteCount: number; f
 }
 
 function renderTrades(trades: VybeTrade[], meta: { remoteCount: number; filteredCount: number; query: string }): void {
+  tradesMeta.textContent = formatTradesMeta(meta);
   updateTradesSummary(trades, meta);
   tradesTable?.classList.toggle('trades-table--placeholder', trades.length === 0);
   const programColorMap = buildProgramGroupColorMap(trades);

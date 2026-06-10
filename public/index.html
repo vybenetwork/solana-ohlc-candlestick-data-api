@@ -39,7 +39,7 @@
     <meta name="twitter:image:alt" content="Solana OHLC candlestick chart API app powered by Vybe API" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="app.css?v=108" />
+    <link rel="stylesheet" href="app.css?v=109" />
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
@@ -177,17 +177,19 @@
       </header>
 
       <section class="section-card section-card--remote inputs panel">
-        <div class="section-header">
-          <span class="section-header__marker" aria-hidden="true"></span>
-          <h2 class="section-header__title">Remote Filters</h2>
-          <div class="section-loading" id="loadingIndicator" hidden aria-hidden="true">
-            <span class="loading-spinner"></span>
-            <span class="loading-text">Loading…</span>
+        <div class="section-heading">
+          <div class="section-header">
+            <span class="section-header__marker" aria-hidden="true"></span>
+            <h2 class="section-header__title">Remote Filters</h2>
+            <div class="section-loading" id="loadingIndicator" hidden aria-hidden="true">
+              <span class="loading-spinner"></span>
+              <span class="loading-text">Loading…</span>
+            </div>
+            <span class="candles-pages-progress section-header-status" id="candlesPagesProgress" aria-live="polite"></span>
           </div>
-          <span class="candles-pages-progress section-header-status" id="candlesPagesProgress" aria-live="polite"></span>
-        </div>
-        <div class="section-lede meta remote-filters-help">
-          <strong>Remote filters</strong> fetch trades from the Vybe API and change the dataset.
+          <div class="section-lede meta remote-filters-help">
+            <strong>Remote filters</strong> fetch trades from the Vybe API and change the dataset.
+          </div>
         </div>
         <div class="candles-controls candles-controls--remote">
           <div class="field field-switch candles-source-switch">
@@ -537,7 +539,7 @@
         <div class="section-lede meta" id="summaryMeta">—</div>
         <div class="summary-grid">
           <div class="summary-box">
-            <h3>Programs (top 5)</h3>
+            <h3 id="topProgramsTitle">Programs (Top 5)</h3>
             <div class="table-wrap">
               <table class="summary-mini-table summary-mini-table--programs">
                 <colgroup>
@@ -559,7 +561,7 @@
             </div>
           </div>
           <div class="summary-box">
-            <h3>Markets / Pools (Top 5)</h3>
+            <h3 id="topMarketsTitle">Markets / Pools (Top 5)</h3>
             <div class="table-wrap">
               <table class="summary-mini-table summary-mini-table--markets">
                 <colgroup>
@@ -581,7 +583,7 @@
             </div>
           </div>
           <div class="summary-box">
-            <h3>Quote mints (top 5)</h3>
+            <h3 id="topQuotesTitle">Quote mints (Top 5)</h3>
             <div class="table-wrap">
               <table class="summary-mini-table summary-mini-table--quotes">
                 <colgroup>
@@ -617,6 +619,7 @@
           </div>
           <span class="section-error" id="tradesError" hidden aria-hidden="true"></span>
         </div>
+        <div class="section-lede meta" id="tradesMeta">—</div>
         <div class="trades-summary-grid" id="tradesSummary" aria-live="polite">
           <div class="trades-summary-item trades-summary-item--count">
             <span class="trades-summary-label"><span class="trades-summary-label-icon field-icon icon-pages" aria-hidden="true"></span>Trades loaded</span>

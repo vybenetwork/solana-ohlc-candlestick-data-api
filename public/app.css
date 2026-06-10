@@ -826,8 +826,39 @@ a:hover {
   margin-bottom: 0.15rem;
 }
 
+.section-heading {
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-bottom: 0;
+  align-self: flex-start;
+}
+
+.section-heading .section-header {
+  width: 100%;
+  min-height: 40px;
+  max-height: 40px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.section-heading .section-lede.meta {
+  margin: 0;
+  max-width: fit-content;
+}
+
+.inputs.panel.section-card--remote {
+  row-gap: 0.5rem;
+}
+
 .section-header__marker {
   flex-shrink: 0;
+  align-self: center;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -1120,10 +1151,7 @@ a:hover {
   margin-bottom: 0.75rem;
 }
 .remote-filters-help {
-  margin: 0.5rem 0 0.5rem;
-  font-size: 0.8rem;
-  color: #a1a1aa;
-  flex-basis: 100%;
+  margin: 0;
 }
 
 .local-filters-help {
@@ -1319,6 +1347,8 @@ button:disabled {
 .section-header .section-loading,
 .section-header .section-error,
 .section-header .section-warning {
+  margin: 0 0 0 6px;
+  max-height: 30px;
   align-self: center;
   flex-shrink: 1;
   min-width: 0;
